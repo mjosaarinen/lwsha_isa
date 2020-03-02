@@ -6,3 +6,16 @@
 
 #include <stdio.h>
 #include "sha3.h"
+/*
+//	Interleave
+
+void interleave(uint32_t d[2], uint64_t x)
+{
+	int i
+
+
+}
+
+//	De-interlave
+
+*/
