@@ -6,7 +6,7 @@
 
 // update the state with given number of rounds
 
-void sha3_keccakf(uint64_t st[25])
+void sha3_keccakf(uint64_t st[25], int rounds)
 {
 	// constants
 	const uint64_t keccakf_rndc[24] = {
@@ -46,7 +46,7 @@ void sha3_keccakf(uint64_t st[25])
 #endif
 
 	// actual iteration
-	for (r = 0; r < KECCAKF_ROUNDS; r++) {
+	for (r = 0; r < rounds; r++) {
 
 		// Theta
 		for (i = 0; i < 5; i++)
@@ -122,7 +122,7 @@ int sha3_update(sha3_ctx_t *c, const void *data, size_t len)
 	for (i = 0; i < len; i++) {
 		c->st.b[j++] ^= ((const uint8_t *) data)[i];
 		if (j >= c->rsiz) {
-			sha3_keccakf(c->st.q);
+			sha3_keccakf(c->st.q, KECCAKF_ROUNDS);
 			j = 0;
 		}
 	}
@@ -139,7 +139,7 @@ int sha3_final(void *md, sha3_ctx_t *c)
 
 	c->st.b[c->pt] ^= 0x06;
 	c->st.b[c->rsiz - 1] ^= 0x80;
-	sha3_keccakf(c->st.q);
+	sha3_keccakf(c->st.q, KECCAKF_ROUNDS);
 
 	for (i = 0; i < c->mdlen; i++) {
 		((uint8_t *) md)[i] = c->st.b[i];
@@ -167,7 +167,7 @@ void shake_xof(sha3_ctx_t *c)
 {
 	c->st.b[c->pt] ^= 0x1F;
 	c->st.b[c->rsiz - 1] ^= 0x80;
-	sha3_keccakf(c->st.q);
+	sha3_keccakf(c->st.q, KECCAKF_ROUNDS);
 	c->pt = 0;
 }
 
@@ -179,7 +179,7 @@ void shake_out(sha3_ctx_t *c, void *out, size_t len)
 	j = c->pt;
 	for (i = 0; i < len; i++) {
 		if (j >= c->rsiz) {
-			sha3_keccakf(c->st.q);
+			sha3_keccakf(c->st.q, KECCAKF_ROUNDS);
 			j = 0;
 		}
 		((uint8_t *) out)[i] = c->st.b[j++];

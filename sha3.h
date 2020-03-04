@@ -26,8 +26,8 @@ typedef struct {
 	int pt, rsiz, mdlen;					// these don't overflow
 } sha3_ctx_t;
 
-//	Compression function.
-void sha3_keccakf(uint64_t st[25]);
+//	permutation
+void sha3_keccakf(uint64_t st[25], int rounds);
 
 //	OpenSSL - like interfece
 int sha3_init(sha3_ctx_t *c, int mdlen);	// mdlen = hash output in bytes

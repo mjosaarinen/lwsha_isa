@@ -171,7 +171,7 @@ void test_speed()
 	n = 0;
 	do {
 		for (i = 0; i < 100000; i++)
-			sha3_keccakf(st);
+			sha3_keccakf(st, KECCAKF_ROUNDS);
 		n += i;
 		us = clock() - bg;
 	} while (us < 3 * CLOCKS_PER_SEC);
