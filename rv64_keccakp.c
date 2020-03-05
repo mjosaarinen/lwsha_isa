@@ -97,7 +97,7 @@ void rv64_keccakf(uint64_t s[25], int rounds)
 
 		//	Theta Rho Pi
 
-		ta = sa ^ sf ^ sk ^ sp ^ su;	//	20 XORs
+		ta = sa ^ sf ^ sk ^ sp ^ su;	//	20 XOR
 		tb = sb ^ sg ^ sl ^ sq ^ sv;
 		tc = sc ^ sh ^ sm ^ sr ^ sw;
 		td = sd ^ si ^ sn ^ ss ^ sx;
@@ -109,8 +109,8 @@ void rv64_keccakf(uint64_t s[25], int rounds)
 		ta = ta ^ rv_rorw(tc, 63);
 		tc = tc ^ rv_rorw( u, 63);
 
-		sa ^= te;
-		u  = rv_rorw(sb ^ ta, 63);
+		sa = sa ^ te;					//	1 xor
+		u  = rv_rorw(sb ^ ta, 63);		//	24 XOR, 24 RORW
 		sb = rv_rorw(sg ^ ta, 20);
 		sg = rv_rorw(sj ^ td, 44);
 		sj = rv_rorw(sw ^ tb,  3);
@@ -138,61 +138,60 @@ void rv64_keccakf(uint64_t s[25], int rounds)
 
 		//	Chi
 
-		ta = rv_andn(sb, sc);
+		ta = rv_andn(sb, sc);			//	25 ANDN, 25 XOR
 		tb = rv_andn(sc, sd);
 		tc = rv_andn(sd, se);
 		td = rv_andn(se, sa);
 		te = rv_andn(sa, sb);
-		sa ^= ta;
-		sb ^= tb;
-		sc ^= tc;
-		sd ^= td;
-		se ^= te;
+		sa = sa ^ ta;
+		sb = sb ^ tb;
+		sc = sc ^ tc;
+		sd = sd ^ td;
+		se = se ^ te;
 		ta = rv_andn(sg, sh);
 		tb = rv_andn(sh, si);
 		tc = rv_andn(si, sj);
 		td = rv_andn(sj, sf);
 		te = rv_andn(sf, sg);
-		sf ^= ta;
-		sg ^= tb;
-		sh ^= tc;
-		si ^= td;
-		sj ^= te;
+		sf = sf ^ ta;
+		sg = sg ^ tb;
+		sh = sh ^ tc;
+		si = si ^ td;
+		sj = sj ^ te;
 		ta = rv_andn(sl, sm);
 		tb = rv_andn(sm, sn);
 		tc = rv_andn(sn, so);
 		td = rv_andn(so, sk);
 		te = rv_andn(sk, sl);
-		sk ^= ta;
-		sl ^= tb;
-		sm ^= tc;
-		sn ^= td;
-		so ^= te;
+		sk = sk ^ ta;
+		sl = sl ^ tb;
+		sm = sm ^ tc;
+		sn = sn ^ td;
+		so = so ^ te;
 		ta = rv_andn(sq, sr);
 		tb = rv_andn(sr, ss);
 		tc = rv_andn(ss, st);
 		td = rv_andn(st, sp);
 		te = rv_andn(sp, sq);
-		sp ^= ta;
-		sq ^= tb;
-		sr ^= tc;
-		ss ^= td;
-		st ^= te;
+		sp = sp ^ ta;
+		sq = sq ^ tb;
+		sr = sr ^ tc;
+		ss = ss ^ td;
+		st = st ^ te;
 		ta = rv_andn(sv, sw);
 		tb = rv_andn(sw, sx);
 		tc = rv_andn(sx, sy);
 		td = rv_andn(sy, su);
 		te = rv_andn(su, sv);
-		su ^= ta;
-		sv ^= tb;
-		sw ^= tc;
-		sx ^= td;
-		sy ^= te;
+		su = su ^ ta;
+		sv = sv ^ tb;
+		sw = sw ^ tc;
+		sx = sx ^ td;
+		sy = sy ^ te;
 
 		//	Iota
-		sa ^= keccakf_rndc[i];
 
-
+		sa ^= keccakf_rndc[i];			//	1 load, 1 XOR
 	}
 
 	s[ 0] = sa;
