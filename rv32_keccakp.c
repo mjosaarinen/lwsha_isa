@@ -103,7 +103,7 @@ void split_keccakf(uint64_t s[25], int rounds)
 
 	// variables
 	int i, j, r;
-	uint64_t t, u, bc[5];
+	uint64_t t, bc[5];
 
 
 /*
