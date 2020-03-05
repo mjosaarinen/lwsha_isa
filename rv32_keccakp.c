@@ -14,7 +14,7 @@
 
 //	ROR / RORI
 
-uint32_t rv_ror(uint32_t rs1, uint32_t rs2)
+static uint32_t rv_ror(uint32_t rs1, uint32_t rs2)
 {
 	int shamt = rs2 & (32 - 1);
 	return (rs1 >> shamt) | (rs1 << ((32 - shamt) & (32 - 1)));
@@ -22,7 +22,7 @@ uint32_t rv_ror(uint32_t rs1, uint32_t rs2)
 
 //	RORW / RORIW
 
-uint64_t rv_rorw(uint64_t rs1, uint64_t rs2)
+static int64_t rv_rorw(uint64_t rs1, uint64_t rs2)
 {
 	int shamt = rs2 & (64 - 1);
 	return (rs1 >> shamt) | (rs1 << ((64 - shamt) & (64 - 1)));
@@ -78,7 +78,7 @@ void prtst(const void *p)
 
 // update the state with given number of rounds
 
-void split_keccakf(uint64_t st[25], int rounds)
+void split_keccakf(uint64_t s[25], int rounds)
 {
 	// constants
 	const uint64_t keccakf_rndc[24] = {
@@ -103,7 +103,7 @@ void split_keccakf(uint64_t st[25], int rounds)
 
 	// variables
 	int i, j, r;
-	uint64_t t, bc[5];
+	uint64_t t, u, bc[5];
 
 
 /*
@@ -111,46 +111,132 @@ void split_keccakf(uint64_t st[25], int rounds)
 		61, 54, 21, 39, 25, 23, 19, 49, 43, 56, 46, 62,  3,  8, 50 };
 
 	for (i = 1; i < 25; i++)
-			st[i] = rv_rorw(st[i], rorc[i]);	
+			s[i] = rv_rorw(s[i], rorc[i]);	
 */	
 
-	uint32_t v[25][2];
-
-	uint32_t t0, t1, u0, u1;
+//	uint32_t v[25][2];
+//	uint32_t t0, t1, u0, u1;
 
 	//	iteration
 	for (r = 0; r < rounds; r++) {
 
 		// Theta
 		for (i = 0; i < 5; i++)
-			bc[i] = st[i] ^ st[i + 5] ^ st[i + 10] ^ st[i + 15] ^ st[i + 20];
+			bc[i] = s[i] ^ s[i + 5] ^ s[i + 10] ^ s[i + 15] ^ s[i + 20];
 
 		for (i = 0; i < 5; i++) {
 			t = bc[(i + 4) % 5] ^ ROTL64(bc[(i + 1) % 5], 1);
 			for (j = 0; j < 25; j += 5)
-				st[j + i] ^= t;
+				s[j + i] ^= t;
 		}
 
 		// Pi
 
+#if 1
+
+		t = s[ 1];
+		s[ 1] = rv_rorw(s[ 6], 20);
+		s[ 6] = rv_rorw(s[ 9], 44);
+		s[ 9] = rv_rorw(s[22],  3);
+		s[22] = rv_rorw(s[14], 25);
+		s[14] = rv_rorw(s[20], 46);
+		s[20] = rv_rorw(s[ 2],  2);
+		s[ 2] = rv_rorw(s[12], 21);
+		s[12] = rv_rorw(s[13], 39);
+		s[13] = rv_rorw(s[19], 56);
+		s[19] = rv_rorw(s[23],  8);
+		s[23] = rv_rorw(s[15], 23);
+		s[15] = rv_rorw(s[ 4], 37);
+		s[ 4] = rv_rorw(s[24], 50);
+		s[24] = rv_rorw(s[21], 62);
+		s[21] = rv_rorw(s[ 8],  9);
+		s[ 8] = rv_rorw(s[16], 19);
+		s[16] = rv_rorw(s[ 5], 28);
+		s[ 5] = rv_rorw(s[ 3], 36);
+		s[ 3] = rv_rorw(s[18], 43);
+		s[18] = rv_rorw(s[17], 49);
+		s[17] = rv_rorw(s[11], 54);
+		s[11] = rv_rorw(s[ 7], 58);
+		s[ 7] = rv_rorw(s[10], 61);
+		s[10] = rv_rorw(s[ 1], 63);
+
+
+		for (i = 23; i >= 0; i--) {
+			j = 64 - keccakf_rotc[i];
+			printf("\t\ts%c = rv_rorw(s%c, %2d);\n",
+				'a' + keccakf_piln[i], 'a' + keccakf_piln[(i + 23) % 24], j);
+		}
+
+		exit(0);
+
 /*
-		t = st[1];
-		for (i = 0; i < 24; i++) {
+		t = s[1];
+		for (i = 0; i < 24; i += 2) {
+
 			j = keccakf_piln[i];
-			bc[0] = st[j];
-			st[j] = rv_rorw(t, 64-keccakf_rotc[i]);
-			t = bc[0];
+			u = s[j];
+			s[j] = rv_rorw(t, 64-keccakf_rotc[i]);
+
+			printf("u = s[%2d]; s[%2d] = rv_rorw(t, %2d);\n",
+				j, j, 64-keccakf_rotc[i]);
+
+			j = keccakf_piln[i + 1];
+			t = s[j];
+			s[j] = rv_rorw(u, 64-keccakf_rotc[i + 1]);
+
+
+			printf("t = s[%2d]; s[%2d] = rv_rorw(u, %2d);\n",
+				j, j, 64-keccakf_rotc[i + 1]);
 		}
+
+	exit(0);
 */
+#else
 
-		for (i = 0; i < 25; i++) {
-			intrlv(&v[i][0], &v[i][1], st[i]);
-		}
 
-		t0 = v[1][0];
-		t1 = v[1][1];
+	//	state; 50 words
 
-		for (i = 0; i < 24; i++) {
+	uint32_t	sa0, sa1, sb0, sb1, sc0, sc1, sd0, sd1, se0, se1,
+				sf0, sf1, sg0, sg1, sh0, sh1, si0, si1, sj0, sj1,
+				sk0, sk1, sl0, sl1, sm0, sm1, sn0, sn1, so0, so1,
+				sp0, sp1, sq0, sq1, sr0, sr1, ss0, ss1, st0, st1,
+				su0, su1, sv0, sv1, sw0, sw1, sx0, sx1, sy0, sy1;
+
+		intrlv(&sa0, &sa1, s[ 0]);
+		intrlv(&sb0, &sb1, s[ 1]);
+		intrlv(&sc0, &sc1, s[ 2]);
+		intrlv(&sd0, &sd1, s[ 3]);
+		intrlv(&se0, &se1, s[ 4]);
+		intrlv(&sf0, &sf1, s[ 5]);
+		intrlv(&sg0, &sg1, s[ 6]);
+		intrlv(&sh0, &sh1, s[ 7]);
+		intrlv(&si0, &si1, s[ 8]);
+		intrlv(&sj0, &sj1, s[ 9]);
+		intrlv(&sk0, &sk1, s[10]);
+		intrlv(&sl0, &sl1, s[11]);
+		intrlv(&sm0, &sm1, s[12]);
+		intrlv(&sn0, &sn1, s[13]);
+		intrlv(&so0, &so1, s[14]);
+		intrlv(&sp0, &sp1, s[15]);
+		intrlv(&sq0, &sq1, s[16]);
+		intrlv(&sr0, &sr1, s[17]);
+		intrlv(&ss0, &ss1, s[18]);
+		intrlv(&st0, &st1, s[19]);
+		intrlv(&su0, &su1, s[20]);
+		intrlv(&sv0, &sv1, s[21]);
+		intrlv(&sw0, &sw1, s[22]);
+		intrlv(&sx0, &sx1, s[23]);
+		intrlv(&sy0, &sy1, s[24]);
+
+		t0 = sb0;
+		t1 = sb1;
+
+		j = 1;
+
+		t0 = v[j][0];
+		t1 = v[j][1];
+
+		for (i = 0; i < 24; i += 2) {
 
 			int rr;
 			int r0, r1;
@@ -160,6 +246,9 @@ void split_keccakf(uint64_t st[25], int rounds)
 			u0 = v[j][0];
 			u1 = v[j][1];
 
+			printf("\t\ts%c0 = rv_ror(t0, %d);\n", j, r1);
+			printf("\t\ts%c1 = rv_ror(t1, %d);\n", j, r1);
+
 			rr = 64 - keccakf_rotc[i];
 
 			r0 = (rr >> 1) & 0x1F;
@@ -168,57 +257,82 @@ void split_keccakf(uint64_t st[25], int rounds)
 			if ((rr & 1) == 0) {
 				v[j][0] = rv_ror(t0, r1);
 				v[j][1] = rv_ror(t1, r1);
+
+				printf("\t\ts%c0 = rv_ror(t0, %d);\n", j, r1);
+				printf("\t\ts%c1 = rv_ror(t1, %d);\n", j, r1);
 			} else {
 				v[j][0] = rv_ror(t1, r0);
 				v[j][1] = rv_ror(t0, r1);
+
+				printf("\t\ts%c0 = rv_ror(t1, %d);\n", j, r0);
+				printf("\t\ts%c1 = rv_ror(t0, %d);\n", j, r1);
 			}
 
-			t0 = u0;
-			t1 = u1;
+
+			j = keccakf_piln[i + 1];
+
+			t0 = v[j][0];
+			t1 = v[j][1];
+
+			rr = 64 - keccakf_rotc[i + 1];
+
+			r0 = (rr >> 1) & 0x1F;
+			r1 = ((rr + 1) >> 1) & 0x1F;
+	
+			if ((rr & 1) == 0) {
+				v[j][0] = rv_ror(u0, r1);
+				v[j][1] = rv_ror(u1, r1);
+			} else {
+				v[j][0] = rv_ror(u1, r0);
+				v[j][1] = rv_ror(u0, r1);
+			}
 		}
+
+
+
+		s[ 0] = untrlv(sa0, sa1);
+		s[ 1] = untrlv(sb0, sb1);
+		s[ 2] = untrlv(sc0, sc1);
+		s[ 3] = untrlv(sd0, sd1);
+		s[ 4] = untrlv(se0, se1);
+		s[ 5] = untrlv(sf0, sf1);
+		s[ 6] = untrlv(sg0, sg1);
+		s[ 7] = untrlv(sh0, sh1);
+		s[ 8] = untrlv(si0, si1);
+		s[ 9] = untrlv(sj0, sj1);
+		s[10] = untrlv(sk0, sk1);
+		s[11] = untrlv(sl0, sl1);
+		s[12] = untrlv(sm0, sm1);
+		s[13] = untrlv(sn0, sn1);
+		s[14] = untrlv(so0, so1);
+		s[15] = untrlv(sp0, sp1);
+		s[16] = untrlv(sq0, sq1);
+		s[17] = untrlv(sr0, sr1);
+		s[18] = untrlv(ss0, ss1);
+		s[19] = untrlv(st0, st1);
+		s[20] = untrlv(su0, su1);
+		s[21] = untrlv(sv0, sv1);
+		s[22] = untrlv(sw0, sw1);
+		s[23] = untrlv(sx0, sx1);
+		s[24] = untrlv(sy0, sy1);
 
 		for (i = 0; i < 25; i++) {
-			st[i] = untrlv(v[i][0], v[i][1]);
+			s[i] = untrlv(v[i][0], v[i][1]);
 		}
 
+#endif
 
 		//	Chi
 		for (j = 0; j < 25; j += 5) {
 			for (i = 0; i < 5; i++)
-				bc[i] = st[j + i];
+				bc[i] = s[j + i];
 			for (i = 0; i < 5; i++)
-				st[j + i] ^= (~bc[(i + 1) % 5]) & bc[(i + 2) % 5];
+				s[j + i] ^= (~bc[(i + 1) % 5]) & bc[(i + 2) % 5];
 		}
 
 		//	Iota
-		st[0] ^= keccakf_rndc[r];
+		s[0] ^= keccakf_rndc[r];
 	}
-}
-
-
-int gek()
-{
-	int i, d;
-	uint64_t sa[25], sb[25];
-
-	for (i = 0; i < 25; i++)
-		sa[i] = i;
-	memcpy(sb, sa, sizeof(sb));
-
-	sha3_keccakf(sb, 24);
-	prtst(sb);
-	printf("\n");
-
-	split_keccakf(sa, 24);
-	prtst(sa);
-
-	d = 0;
-	for (i = 0; i < 25; i++) {
-		d += __builtin_popcountll(sa[i] ^ sb[i]);
-	}
-	printf("d = %d\n", d);
-
-	return 0;
 }
 
 int vgek()
