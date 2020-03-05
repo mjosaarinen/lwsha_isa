@@ -71,7 +71,7 @@ void prtst(const void *p)
 	const uint64_t *v = ((const uint64_t *) p);
 
 	for (i = 0; i < 25; i += 5) {
-		printf("%2d : %016lX %016lX %016lX %016lX %016lX\n", 
+		printf("%2d : %016lX %016lX %016lX %016lX %016lX\n",
 			i, v[i], v[i + 1], v[i + 2], v[i + 3], v[i + 4]);
 	}
 }
@@ -107,12 +107,12 @@ void split_keccakf(uint64_t s[25], int rounds)
 
 
 /*
-	const int rorc[25] = {   0, 63,  2, 36, 37, 28, 20, 58,  9, 44, 
-		61, 54, 21, 39, 25, 23, 19, 49, 43, 56, 46, 62,  3,  8, 50 };
+	const int rorc[25] = {	 0, 63,	 2, 36, 37, 28, 20, 58,	 9, 44,
+		61, 54, 21, 39, 25, 23, 19, 49, 43, 56, 46, 62,	 3,	 8, 50 };
 
 	for (i = 1; i < 25; i++)
-			s[i] = rv_rorw(s[i], rorc[i]);	
-*/	
+			s[i] = rv_rorw(s[i], rorc[i]);
+*/
 
 //	uint32_t v[25][2];
 //	uint32_t t0, t1, u0, u1;
@@ -137,19 +137,19 @@ void split_keccakf(uint64_t s[25], int rounds)
 		t = s[ 1];
 		s[ 1] = rv_rorw(s[ 6], 20);
 		s[ 6] = rv_rorw(s[ 9], 44);
-		s[ 9] = rv_rorw(s[22],  3);
+		s[ 9] = rv_rorw(s[22],	3);
 		s[22] = rv_rorw(s[14], 25);
 		s[14] = rv_rorw(s[20], 46);
-		s[20] = rv_rorw(s[ 2],  2);
+		s[20] = rv_rorw(s[ 2],	2);
 		s[ 2] = rv_rorw(s[12], 21);
 		s[12] = rv_rorw(s[13], 39);
 		s[13] = rv_rorw(s[19], 56);
-		s[19] = rv_rorw(s[23],  8);
+		s[19] = rv_rorw(s[23],	8);
 		s[23] = rv_rorw(s[15], 23);
 		s[15] = rv_rorw(s[ 4], 37);
 		s[ 4] = rv_rorw(s[24], 50);
 		s[24] = rv_rorw(s[21], 62);
-		s[21] = rv_rorw(s[ 8],  9);
+		s[21] = rv_rorw(s[ 8],	9);
 		s[ 8] = rv_rorw(s[16], 19);
 		s[16] = rv_rorw(s[ 5], 28);
 		s[ 5] = rv_rorw(s[ 3], 36);
@@ -253,7 +253,7 @@ void split_keccakf(uint64_t s[25], int rounds)
 
 			r0 = (rr >> 1) & 0x1F;
 			r1 = ((rr + 1) >> 1) & 0x1F;
-	
+
 			if ((rr & 1) == 0) {
 				v[j][0] = rv_ror(t0, r1);
 				v[j][1] = rv_ror(t1, r1);
@@ -278,7 +278,7 @@ void split_keccakf(uint64_t s[25], int rounds)
 
 			r0 = (rr >> 1) & 0x1F;
 			r1 = ((rr + 1) >> 1) & 0x1F;
-	
+
 			if ((rr & 1) == 0) {
 				v[j][0] = rv_ror(u0, r1);
 				v[j][1] = rv_ror(u1, r1);
@@ -346,14 +346,14 @@ int vgek()
 	xsrand(time(NULL));
 
 	x = 0xDEADBEEF01234567;
-	
+
 	for (i = 0; i < 64; i++) {
 
 		y = rv_rorw(x, i);
 		intrlv(&a0, &b0, y);
 
 		intrlv(&a1, &b1, x);
-		
+
 		r0 = (i >> 1) & 0x1F;
 		r1 = ((i + 1) >> 1) & 0x1F;
 
@@ -367,7 +367,7 @@ int vgek()
 
 		z = untrlv(a2, b2);
 
-		printf("%2d : %016lX %016lX %016lX  %08X %08X  %08X %08X\n",
+		printf("%2d : %016lX %016lX %016lX	%08X %08X  %08X %08X\n",
 			i, x, y, z, a0, b0, a2, b2);
 
 		if (y != z) {

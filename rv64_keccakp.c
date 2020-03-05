@@ -33,7 +33,7 @@ static void prtst(const void *p)
 	const uint64_t *v = ((const uint64_t *) p);
 
 	for (i = 0; i < 25; i += 5) {
-		printf("%2d : %016lX %016lX %016lX %016lX %016lX\n", 
+		printf("%2d : %016lX %016lX %016lX %016lX %016lX\n",
 			i, v[i], v[i + 1], v[i + 2], v[i + 3], v[i + 4]);
 	}
 }
@@ -103,7 +103,7 @@ void rv64_keccakf(uint64_t s[25], int rounds)
 		td = sd ^ si ^ sn ^ ss ^ sx;
 		u  = se ^ sj ^ so ^ st ^ sy;
 
-		te = u  ^ rv_rorw(tb, 63);		//	5 RORW, 5 XOR
+		te = u	^ rv_rorw(tb, 63);		//	5 RORW, 5 XOR
 		tb = tb ^ rv_rorw(td, 63);
 		td = td ^ rv_rorw(ta, 63);
 		ta = ta ^ rv_rorw(tc, 63);
