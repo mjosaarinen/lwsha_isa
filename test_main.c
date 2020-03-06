@@ -187,12 +187,14 @@ void test_speed()
 }
 
 int gek();
+int bools();
 
 // main
 int main(int argc, char **argv)
 {
-	if (test_sha3() == 0 && test_shake() == 0)
+	if (test_sha3() == 0 && test_shake() == 0) {
 		printf("FIPS 202 / SHA3, SHAKE128, SHAKE256 Self-Tests OK!\n");
+	}
 
 	gek();
 

@@ -97,20 +97,47 @@ void rv64_keccakf(uint64_t s[25], int rounds)
 
 		//	Theta Rho Pi
 
-		ta = sa ^ sf ^ sk ^ sp ^ su;	//	20 XOR
-		tb = sb ^ sg ^ sl ^ sq ^ sv;
-		tc = sc ^ sh ^ sm ^ sr ^ sw;
-		td = sd ^ si ^ sn ^ ss ^ sx;
-		u  = se ^ sj ^ so ^ st ^ sy;
 
-		te = u	^ rv_rorw(tb, 63);		//	5 RORW, 5 XOR
+		u  = se ^ sj ^ so ^ st ^ sy;
+		tb = sb ^ sg ^ sl ^ sq ^ sv;
+
+		te = u	^ rv_rorw(tb, 63);
+
+		td = sd ^ si ^ sn ^ ss ^ sx;
 		tb = tb ^ rv_rorw(td, 63);
+
+		tc = sc ^ sh ^ sm ^ sr ^ sw;
+		sc = sc ^ tb;
+		sh = sh ^ tb;
+		sm = sm ^ tb;
+		sr = sr ^ tb;
+		sw = sw ^ tb;
+
+		ta = sa ^ sf ^ sk ^ sp ^ su;
+
 		td = td ^ rv_rorw(ta, 63);
 		ta = ta ^ rv_rorw(tc, 63);
 		tc = tc ^ rv_rorw( u, 63);
 
-		sa = sa ^ te;					//	1 xor
-		u  = rv_rorw(sb ^ ta, 63);		//	24 XOR, 24 RORW
+		sb = sb ^ ta;
+		sg = sg ^ ta;
+		sl = sl ^ ta;
+		sq = sq ^ ta;
+		sv = sv ^ ta;
+
+		sa = sa ^ te;
+		sf = sf ^ te;
+		sk = sk ^ te;
+		sp = sp ^ te;
+		su = su ^ te;
+
+
+
+
+		ta = tb = te = 0;//tb = tc = td = te = 0;
+
+		sa = sa ^ te;
+		u  = rv_rorw(sb ^ ta, 63);
 		sb = rv_rorw(sg ^ ta, 20);
 		sg = rv_rorw(sj ^ td, 44);
 		sj = rv_rorw(sw ^ tb,  3);
@@ -138,56 +165,40 @@ void rv64_keccakf(uint64_t s[25], int rounds)
 
 		//	Chi
 
-		ta = rv_andn(sb, sc);			//	25 ANDN, 25 XOR
-		tb = rv_andn(sc, sd);
-		tc = rv_andn(sd, se);
-		td = rv_andn(se, sa);
-		te = rv_andn(sa, sb);
-		sa = sa ^ ta;
-		sb = sb ^ tb;
-		sc = sc ^ tc;
-		sd = sd ^ td;
-		se = se ^ te;
-		ta = rv_andn(sg, sh);
-		tb = rv_andn(sh, si);
-		tc = rv_andn(si, sj);
-		td = rv_andn(sj, sf);
-		te = rv_andn(sf, sg);
-		sf = sf ^ ta;
-		sg = sg ^ tb;
-		sh = sh ^ tc;
-		si = si ^ td;
-		sj = sj ^ te;
-		ta = rv_andn(sl, sm);
-		tb = rv_andn(sm, sn);
-		tc = rv_andn(sn, so);
-		td = rv_andn(so, sk);
-		te = rv_andn(sk, sl);
-		sk = sk ^ ta;
-		sl = sl ^ tb;
-		sm = sm ^ tc;
-		sn = sn ^ td;
-		so = so ^ te;
-		ta = rv_andn(sq, sr);
-		tb = rv_andn(sr, ss);
-		tc = rv_andn(ss, st);
-		td = rv_andn(st, sp);
-		te = rv_andn(sp, sq);
-		sp = sp ^ ta;
-		sq = sq ^ tb;
-		sr = sr ^ tc;
-		ss = ss ^ td;
-		st = st ^ te;
-		ta = rv_andn(sv, sw);
-		tb = rv_andn(sw, sx);
-		tc = rv_andn(sx, sy);
-		td = rv_andn(sy, su);
-		te = rv_andn(su, sv);
-		su = su ^ ta;
-		sv = sv ^ tb;
-		sw = sw ^ tc;
-		sx = sx ^ td;
-		sy = sy ^ te;
+		u  = rv_andn(sd, se);
+		se = se ^ rv_andn(sa, sb);
+		sb = sb ^ rv_andn(sc, sd);
+		sd = sd ^ rv_andn(se, sa);
+		sa = sa ^ rv_andn(sb, sc);
+		sc = sc ^ u;
+
+		u  = rv_andn(si, sj);
+		sj = sj ^ rv_andn(sf, sg);
+		sg = sg ^ rv_andn(sh, si);
+		si = si ^ rv_andn(sj, sf);
+		sf = sf ^ rv_andn(sg, sh);
+		sh = sh ^ u;
+
+		u  = rv_andn(sn, so);
+		so = so ^ rv_andn(sk, sl);
+		sl = sl ^ rv_andn(sm, sn);
+		sn = sn ^ rv_andn(so, sk);
+		sk = sk ^ rv_andn(sl, sm);
+		sm = sm ^ u;
+
+		u  = rv_andn(ss, st);
+		st = st ^ rv_andn(sp, sq);
+		sq = sq ^ rv_andn(sr, ss);
+		ss = ss ^ rv_andn(st, sp);
+		sp = sp ^ rv_andn(sq, sr);
+		sr = sr ^ u;
+
+		u  = rv_andn(sx, sy);
+		sy = sy ^ rv_andn(su, sv);
+		sv = sv ^ rv_andn(sw, sx);
+		sx = sx ^ rv_andn(sy, su);
+		su = su ^ rv_andn(sv, sw);
+		sw = sw ^ u;
 
 		//	Iota
 
