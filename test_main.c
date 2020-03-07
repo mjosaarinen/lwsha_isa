@@ -125,12 +125,12 @@ int bools();
 // main
 int main(int argc, char **argv)
 {
-	sha3_keccakp = rv64_keccakp;
-
+	sha3_keccakp = rv32_keccakp;
+/*
 	if (test_sha3() != 0 || test_shake() != 0) {
 		printf("[FAIL] Self-Test FAILED!\n");
 	}
-
+*/
 	gek();
 
 	return 0;

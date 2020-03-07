@@ -2,22 +2,7 @@
 //	2020-03-05	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-#include <stdint.h>
-
-//	RORW / RORIW
-
-static uint64_t rv_rorw(uint64_t rs1, uint64_t rs2)
-{
-	int shamt = rs2 & (64 - 1);
-	return (rs1 >> shamt) | (rs1 << ((64 - shamt) & (64 - 1)));
-}
-
-//	ANDN
-
-static uint64_t rv_andn(uint64_t rs1, uint64_t rs2)
-{
-	return rs1 & ~rs2;
-}
+#include "insns.h"
 
 //	Keccak-p[1600,24](S)
 

@@ -17,14 +17,15 @@ typedef struct {
 		uint8_t b[200];						//	8-bit bytes
 		uint64_t q[25];						//	64-bit words
 	} st;
-	int pt, rsiz, mdlen;					//	these don't overflow
+	int pt, rsiz, mdlen;					//	(don't overflow these!)
 } sha3_ctx_t;
 
-//	access to switch the permutation 
+//	function pointer to the permutation
 extern void (*sha3_keccakp)(void *);
 
-//	alternatives:
+//	set to one of these alternatives:
 void ref_keccakp(void *);					//	sha3.c ("reference")
+void rv32_keccakp(void *);					//	rv32_keccakp.c
 void rv64_keccakp(void *);					//	rv64_keccakp.c
 
 //	compute a SHA-3 hash "md" of "mdlen" bytes from data in "in"
