@@ -148,9 +148,9 @@ int sha3_final(void *md, sha3_ctx_t *c)
 	return 1;
 }
 
-// compute a SHA-3 hash (md) of given byte length from "in"
+//	compute a SHA-3 hash "md" of "mdlen" bytes from data in "in"
 
-void *sha3(const void *in, size_t inlen, void *md, int mdlen)
+void *sha3(void *md, int mdlen, const void *in, size_t inlen)
 {
 	sha3_ctx_t sha3;
 
