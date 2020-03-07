@@ -2,6 +2,8 @@
 //	2020-03-02	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "sha3.h"
 
 //	simple "reference" permutation
@@ -95,9 +97,15 @@ void ref_keccakp(void *s)
 	}
 }
 
+void null_keccakp(void *s)
+{
+	fprintf(stderr, "[FAIL] *sha3_keccakp is not set.\n");
+	exit(-1);
+}
+
 //	pointer to the function
 
-void (*sha3_keccakp)(void *) = &ref_keccakp;
+void (*sha3_keccakp)(void *) = &null_keccakp;
 
 // Initialize the context for SHA3
 

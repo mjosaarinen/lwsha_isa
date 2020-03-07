@@ -125,13 +125,13 @@ int bools();
 // main
 int main(int argc, char **argv)
 {
-	if (test_sha3() == 0 && test_shake() == 0) {
-		printf("Self-Tests OK!\n");
+	sha3_keccakp = rv64_keccakp;
+
+	if (test_sha3() != 0 || test_shake() != 0) {
+		printf("[FAIL] Self-Test FAILED!\n");
 	}
 
 	gek();
-
-//	test_speed();
 
 	return 0;
 }

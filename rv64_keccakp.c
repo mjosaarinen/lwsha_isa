@@ -6,7 +6,7 @@
 
 //	RORW / RORIW
 
-uint64_t rv_rorw(uint64_t rs1, uint64_t rs2)
+static uint64_t rv_rorw(uint64_t rs1, uint64_t rs2)
 {
 	int shamt = rs2 & (64 - 1);
 	return (rs1 >> shamt) | (rs1 << ((64 - shamt) & (64 - 1)));
@@ -14,9 +14,9 @@ uint64_t rv_rorw(uint64_t rs1, uint64_t rs2)
 
 //	ANDN
 
-uint64_t rv_andn(uint64_t rs1, uint64_t rs2)
+static uint64_t rv_andn(uint64_t rs1, uint64_t rs2)
 {
-	return ~rs1 & rs2;
+	return rs1 & ~rs2;
 }
 
 //	Keccak-p[1600,24](S)
@@ -123,39 +123,39 @@ void rv64_keccakp(void *s)
 
 		//	Chi
 
-		t  = rv_andn(sd, se);
-		se = se ^ rv_andn(sa, sb);
-		sb = sb ^ rv_andn(sc, sd);
-		sd = sd ^ rv_andn(se, sa);
-		sa = sa ^ rv_andn(sb, sc);
+		t  = rv_andn(se, sd);
+		se = se ^ rv_andn(sb, sa);
+		sb = sb ^ rv_andn(sd, sc);
+		sd = sd ^ rv_andn(sa, se);
+		sa = sa ^ rv_andn(sc, sb);
 		sc = sc ^ t;
 
-		t  = rv_andn(si, sj);
-		sj = sj ^ rv_andn(sf, sg);
-		sg = sg ^ rv_andn(sh, si);
-		si = si ^ rv_andn(sj, sf);
-		sf = sf ^ rv_andn(sg, sh);
+		t  = rv_andn(sj, si);
+		sj = sj ^ rv_andn(sg, sf);
+		sg = sg ^ rv_andn(si, sh);
+		si = si ^ rv_andn(sf, sj);
+		sf = sf ^ rv_andn(sh, sg);
 		sh = sh ^ t;
 
-		t  = rv_andn(sn, so);
-		so = so ^ rv_andn(sk, sl);
-		sl = sl ^ rv_andn(sm, sn);
-		sn = sn ^ rv_andn(so, sk);
-		sk = sk ^ rv_andn(sl, sm);
+		t  = rv_andn(so, sn);
+		so = so ^ rv_andn(sl, sk);
+		sl = sl ^ rv_andn(sn, sm);
+		sn = sn ^ rv_andn(sk, so);
+		sk = sk ^ rv_andn(sm, sl);
 		sm = sm ^ t;
 
-		t  = rv_andn(ss, st);
-		st = st ^ rv_andn(sp, sq);
-		sq = sq ^ rv_andn(sr, ss);
-		ss = ss ^ rv_andn(st, sp);
-		sp = sp ^ rv_andn(sq, sr);
+		t  = rv_andn(st, ss);
+		st = st ^ rv_andn(sq, sp);
+		sq = sq ^ rv_andn(ss, sr);
+		ss = ss ^ rv_andn(sp, st);
+		sp = sp ^ rv_andn(sr, sq);
 		sr = sr ^ t;
 
-		t  = rv_andn(sx, sy);
-		sy = sy ^ rv_andn(su, sv);
-		sv = sv ^ rv_andn(sw, sx);
-		sx = sx ^ rv_andn(sy, su);
-		su = su ^ rv_andn(sv, sw);
+		t  = rv_andn(sy, sx);
+		sy = sy ^ rv_andn(sv, su);
+		sv = sv ^ rv_andn(sx, sw);
+		sx = sx ^ rv_andn(su, sy);
+		su = su ^ rv_andn(sw, sv);
 		sw = sw ^ t;
 
 		//	Iota
