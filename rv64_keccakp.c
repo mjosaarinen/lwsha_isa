@@ -2,18 +2,11 @@
 //	2020-03-05	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <time.h>
-
-#include "sha3.h"
-#include "xrand.h"
-
+#include <stdint.h>
 
 //	RORW / RORIW
 
-static uint64_t rv_rorw(uint64_t rs1, uint64_t rs2)
+uint64_t rv_rorw(uint64_t rs1, uint64_t rs2)
 {
 	int shamt = rs2 & (64 - 1);
 	return (rs1 >> shamt) | (rs1 << ((64 - shamt) & (64 - 1)));
@@ -21,78 +14,44 @@ static uint64_t rv_rorw(uint64_t rs1, uint64_t rs2)
 
 //	ANDN
 
-static uint64_t rv_andn(uint64_t rs1, uint64_t rs2)
+uint64_t rv_andn(uint64_t rs1, uint64_t rs2)
 {
 	return ~rs1 & rs2;
 }
 
+//	Keccak-p[1600,24](S)
 
-static void prtst(const void *p)
+void rv64_keccakp(void *s)
 {
-	int i;
-	const uint64_t *v = ((const uint64_t *) p);
-
-	for (i = 0; i < 25; i += 5) {
-		printf("%2d : %016lX %016lX %016lX %016lX %016lX\n",
-			i, v[i], v[i + 1], v[i + 2], v[i + 3], v[i + 4]);
-	}
-}
-
-// update the state with given number of rounds
-
-void rv64_keccakf(uint64_t s[25], int rounds)
-{
-	// constants
-	const uint64_t keccakf_rndc[24] = {
-		0x0000000000000001, 0x0000000000008082, 0x800000000000808a,
-		0x8000000080008000, 0x000000000000808b, 0x0000000080000001,
-		0x8000000080008081, 0x8000000000008009, 0x000000000000008a,
-		0x0000000000000088, 0x0000000080008009, 0x000000008000000a,
-		0x000000008000808b, 0x800000000000008b, 0x8000000000008089,
+	//	round constants
+	const uint64_t rc[24] = {
+		0x0000000000000001, 0x0000000000008082, 0x800000000000808A,
+		0x8000000080008000, 0x000000000000808B, 0x0000000080000001,
+		0x8000000080008081, 0x8000000000008009, 0x000000000000008A,
+		0x0000000000000088, 0x0000000080008009, 0x000000008000000A,
+		0x000000008000808B, 0x800000000000008B, 0x8000000000008089,
 		0x8000000000008003, 0x8000000000008002, 0x8000000000000080,
-		0x000000000000800a, 0x800000008000000a, 0x8000000080008081,
+		0x000000000000800A, 0x800000008000000A, 0x8000000080008081,
 		0x8000000000008080, 0x0000000080000001, 0x8000000080008008
 	};
 
-	// variables
 	int i;
 	uint64_t	t, x, y, z;
+	uint64_t	sa, sb, sc, sd, se, sf, sg, sh, si, sj, sk, sl, sm,
+				sn, so, sp, sq, sr, ss, st, su, sv, sw, sx, sy;
 
-	uint64_t	sa, sb, sc, sd, se,
-				sf, sg, sh, si, sj,
-				sk, sl, sm, sn, so,
-				sp, sq, sr, ss, st,
-				su, sv, sw, sx, sy;
+	//	load state, little endian, aligned
 
-	sa = s[ 0];
-	sb = s[ 1];
-	sc = s[ 2];
-	sd = s[ 3];
-	se = s[ 4];
-	sf = s[ 5];
-	sg = s[ 6];
-	sh = s[ 7];
-	si = s[ 8];
-	sj = s[ 9];
-	sk = s[10];
-	sl = s[11];
-	sm = s[12];
-	sn = s[13];
-	so = s[14];
-	sp = s[15];
-	sq = s[16];
-	sr = s[17];
-	ss = s[18];
-	st = s[19];
-	su = s[20];
-	sv = s[21];
-	sw = s[22];
-	sx = s[23];
-	sy = s[24];
+	uint64_t	*vs = (uint64_t *) s;
+	sa = vs[ 0]; sb = vs[ 1]; sc = vs[ 2]; sd = vs[ 3]; se = vs[ 4];
+	sf = vs[ 5]; sg = vs[ 6]; sh = vs[ 7]; si = vs[ 8]; sj = vs[ 9];
+	sk = vs[10]; sl = vs[11]; sm = vs[12]; sn = vs[13]; so = vs[14];
+	sp = vs[15]; sq = vs[16]; sr = vs[17]; ss = vs[18]; st = vs[19];
+	su = vs[20]; sv = vs[21]; sw = vs[22]; sx = vs[23]; sy = vs[24];
 
 	//	iteration
 
-	for (i = 0; i < rounds; i++) {
+	for (i = 0; i < 24; i++) {
 
 		//	Theta Rho Pi
 
@@ -117,8 +76,7 @@ void rv64_keccakf(uint64_t s[25], int rounds)
 
 		t = sc ^ sh ^ sm ^ sr ^ sw;
 		x = x ^ rv_rorw(t, 63);
-		z = t ^ rv_rorw(z, 63);
-
+		t = t ^ rv_rorw(z, 63);
 		sc = sc ^ y;
 		sh = sh ^ y;
 		sm = sm ^ y;
@@ -131,11 +89,11 @@ void rv64_keccakf(uint64_t s[25], int rounds)
 		sq = sq ^ x;
 		sv = sv ^ x;
 
-		sd = sd ^ z;
-		si = si ^ z;
-		sn = sn ^ z;
-		ss = ss ^ z;
-		sx = sx ^ z;
+		sd = sd ^ t;
+		si = si ^ t;
+		sn = sn ^ t;
+		ss = ss ^ t;
+		sx = sx ^ t;
 
 		t  = rv_rorw(sb, 63);
 		sb = rv_rorw(sg, 20);
@@ -202,61 +160,15 @@ void rv64_keccakf(uint64_t s[25], int rounds)
 
 		//	Iota
 
-		sa ^= keccakf_rndc[i];			//	1 load, 1 XOR
+		sa = sa ^ rc[i];
 	}
 
-	s[ 0] = sa;
-	s[ 1] = sb;
-	s[ 2] = sc;
-	s[ 3] = sd;
-	s[ 4] = se;
-	s[ 5] = sf;
-	s[ 6] = sg;
-	s[ 7] = sh;
-	s[ 8] = si;
-	s[ 9] = sj;
-	s[10] = sk;
-	s[11] = sl;
-	s[12] = sm;
-	s[13] = sn;
-	s[14] = so;
-	s[15] = sp;
-	s[16] = sq;
-	s[17] = sr;
-	s[18] = ss;
-	s[19] = st;
-	s[20] = su;
-	s[21] = sv;
-	s[22] = sw;
-	s[23] = sx;
-	s[24] = sy;
-}
+	//	store state
 
-
-int gek()
-{
-	int i, d;
-	uint64_t sa[25], sb[25];
-
-	for (i = 0; i < 25; i++) {
-		sa[i] = i;
-	}
-
-	memcpy(sb, sa, sizeof(sb));
-
-	sha3_keccakf(sb, 24);
-	prtst(sb);
-	printf("\n");
-
-	rv64_keccakf(sa, 24);
-	prtst(sa);
-
-	d = 0;
-	for (i = 0; i < 25; i++) {
-		d += __builtin_popcountll(sa[i] ^ sb[i]);
-	}
-	printf("d = %d\n", d);
-
-	return 0;
+	vs[ 0] = sa; vs[ 1] = sb; vs[ 2] = sc; vs[ 3] = sd; vs[ 4] = se;
+	vs[ 5] = sf; vs[ 6] = sg; vs[ 7] = sh; vs[ 8] = si; vs[ 9] = sj;
+	vs[10] = sk; vs[11] = sl; vs[12] = sm; vs[13] = sn; vs[14] = so;
+	vs[15] = sp; vs[16] = sq; vs[17] = sr; vs[18] = ss; vs[19] = st;
+	vs[20] = su; vs[21] = sv; vs[22] = sw; vs[23] = sx; vs[24] = sy;
 }
 

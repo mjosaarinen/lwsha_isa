@@ -12,6 +12,11 @@
 #include "sha3.h"
 #include "xrand.h"
 
+
+#ifndef ROTL64
+#define ROTL64(x, y) (((x) << (y)) | ((x) >> (64 - (y))))
+#endif
+
 //	ROR / RORI
 
 static uint32_t rv_ror(uint32_t rs1, uint32_t rs2)
@@ -64,6 +69,7 @@ uint64_t untrlv(uint32_t a, uint32_t b)
 
 	return x;
 }
+
 
 void prtst(const void *p)
 {
@@ -335,6 +341,35 @@ void split_keccakf(uint64_t s[25], int rounds)
 	}
 }
 
+void rv64_keccakp(void *);
+
+int gek()
+{
+	int i, d;
+	uint64_t sa[25], sb[25];
+
+	for (i = 0; i < 25; i++) {
+		sa[i] = i;
+	}
+
+	memcpy(sb, sa, sizeof(sb));
+
+	sha3_keccakp(sb);
+	prtst(sb);
+	printf("\n");
+
+	rv64_keccakp(sa);
+	prtst(sa);
+
+	d = 0;
+	for (i = 0; i < 25; i++) {
+		d += __builtin_popcountll(sa[i] ^ sb[i]);
+	}
+	printf("d = %d\n", d);
+
+	return 0;
+}
+
 int vgek()
 {
 	int i;
@@ -377,4 +412,7 @@ int vgek()
 
 	return 0;
 }
+
+
+
 
