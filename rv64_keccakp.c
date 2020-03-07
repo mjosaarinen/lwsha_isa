@@ -36,7 +36,7 @@ void rv64_keccakp(void *s)
 	};
 
 	int i;
-	uint64_t	t, x, y, z;
+	uint64_t	t, u, v, w;
 	uint64_t	sa, sb, sc, sd, se, sf, sg, sh, si, sj, sk, sl, sm,
 				sn, so, sp, sq, sr, ss, st, su, sv, sw, sx, sy;
 
@@ -55,10 +55,10 @@ void rv64_keccakp(void *s)
 
 		//	Theta Rho Pi
 
-		x = sa ^ sf ^ sk ^ sp ^ su;
-		y = sb ^ sg ^ sl ^ sq ^ sv;
-		z = se ^ sj ^ so ^ st ^ sy;
-		t = z ^ rv_rorw(y, 63);
+		u = sa ^ sf ^ sk ^ sp ^ su;
+		v = sb ^ sg ^ sl ^ sq ^ sv;
+		w = se ^ sj ^ so ^ st ^ sy;
+		t = w ^ rv_rorw(v, 63);
 		sa = sa ^ t;
 		sf = sf ^ t;
 		sk = sk ^ t;
@@ -66,8 +66,8 @@ void rv64_keccakp(void *s)
 		su = su ^ t;
 
 		t = sd ^ si ^ sn ^ ss ^ sx;
-		y = y ^ rv_rorw(t, 63);
-		t = t ^ rv_rorw(x, 63);
+		v = v ^ rv_rorw(t, 63);
+		t = t ^ rv_rorw(u, 63);
 		se = se ^ t;
 		sj = sj ^ t;
 		so = so ^ t;
@@ -75,19 +75,19 @@ void rv64_keccakp(void *s)
 		sy = sy ^ t;
 
 		t = sc ^ sh ^ sm ^ sr ^ sw;
-		x = x ^ rv_rorw(t, 63);
-		t = t ^ rv_rorw(z, 63);
-		sc = sc ^ y;
-		sh = sh ^ y;
-		sm = sm ^ y;
-		sr = sr ^ y;
-		sw = sw ^ y;
+		u = u ^ rv_rorw(t, 63);
+		t = t ^ rv_rorw(w, 63);
+		sc = sc ^ v;
+		sh = sh ^ v;
+		sm = sm ^ v;
+		sr = sr ^ v;
+		sw = sw ^ v;
 
-		sb = sb ^ x;
-		sg = sg ^ x;
-		sl = sl ^ x;
-		sq = sq ^ x;
-		sv = sv ^ x;
+		sb = sb ^ u;
+		sg = sg ^ u;
+		sl = sl ^ u;
+		sq = sq ^ u;
+		sv = sv ^ u;
 
 		sd = sd ^ t;
 		si = si ^ t;

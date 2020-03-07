@@ -23,6 +23,10 @@ typedef struct {
 //	access to switch the permutation 
 extern void (*sha3_keccakp)(void *);
 
+//	alternatives:
+void ref_keccakp(void *);					//	sha3.c ("reference")
+void rv64_keccakp(void *);					//	rv64_keccakp.c
+
 //	compute a SHA-3 hash "md" of "mdlen" bytes from data in "in"
 void *sha3(void *md, int mdlen, const void *in, size_t inlen);
 
