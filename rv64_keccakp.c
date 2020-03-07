@@ -56,9 +56,7 @@ void rv64_keccakf(uint64_t s[25], int rounds)
 
 	// variables
 	int i;
-	uint64_t u;
-
-	uint64_t	ta, tb, tc, td, te;
+	uint64_t	t, x, y, z;
 
 	uint64_t	sa, sb, sc, sd, se,
 				sf, sg, sh, si, sj,
@@ -93,112 +91,114 @@ void rv64_keccakf(uint64_t s[25], int rounds)
 	sy = s[24];
 
 	//	iteration
+
 	for (i = 0; i < rounds; i++) {
 
 		//	Theta Rho Pi
 
+		x = sa ^ sf ^ sk ^ sp ^ su;
+		y = sb ^ sg ^ sl ^ sq ^ sv;
+		z = se ^ sj ^ so ^ st ^ sy;
+		t = z ^ rv_rorw(y, 63);
+		sa = sa ^ t;
+		sf = sf ^ t;
+		sk = sk ^ t;
+		sp = sp ^ t;
+		su = su ^ t;
 
-		u  = se ^ sj ^ so ^ st ^ sy;
-		tb = sb ^ sg ^ sl ^ sq ^ sv;
+		t = sd ^ si ^ sn ^ ss ^ sx;
+		y = y ^ rv_rorw(t, 63);
+		t = t ^ rv_rorw(x, 63);
+		se = se ^ t;
+		sj = sj ^ t;
+		so = so ^ t;
+		st = st ^ t;
+		sy = sy ^ t;
 
-		te = u	^ rv_rorw(tb, 63);
+		t = sc ^ sh ^ sm ^ sr ^ sw;
+		x = x ^ rv_rorw(t, 63);
+		z = t ^ rv_rorw(z, 63);
 
-		td = sd ^ si ^ sn ^ ss ^ sx;
-		tb = tb ^ rv_rorw(td, 63);
+		sc = sc ^ y;
+		sh = sh ^ y;
+		sm = sm ^ y;
+		sr = sr ^ y;
+		sw = sw ^ y;
 
-		tc = sc ^ sh ^ sm ^ sr ^ sw;
-		sc = sc ^ tb;
-		sh = sh ^ tb;
-		sm = sm ^ tb;
-		sr = sr ^ tb;
-		sw = sw ^ tb;
+		sb = sb ^ x;
+		sg = sg ^ x;
+		sl = sl ^ x;
+		sq = sq ^ x;
+		sv = sv ^ x;
 
-		ta = sa ^ sf ^ sk ^ sp ^ su;
+		sd = sd ^ z;
+		si = si ^ z;
+		sn = sn ^ z;
+		ss = ss ^ z;
+		sx = sx ^ z;
 
-		td = td ^ rv_rorw(ta, 63);
-		ta = ta ^ rv_rorw(tc, 63);
-		tc = tc ^ rv_rorw( u, 63);
-
-		sb = sb ^ ta;
-		sg = sg ^ ta;
-		sl = sl ^ ta;
-		sq = sq ^ ta;
-		sv = sv ^ ta;
-
-		sa = sa ^ te;
-		sf = sf ^ te;
-		sk = sk ^ te;
-		sp = sp ^ te;
-		su = su ^ te;
-
-
-
-
-		ta = tb = te = 0;//tb = tc = td = te = 0;
-
-		sa = sa ^ te;
-		u  = rv_rorw(sb ^ ta, 63);
-		sb = rv_rorw(sg ^ ta, 20);
-		sg = rv_rorw(sj ^ td, 44);
-		sj = rv_rorw(sw ^ tb,  3);
-		sw = rv_rorw(so ^ td, 25);
-		so = rv_rorw(su ^ te, 46);
-		su = rv_rorw(sc ^ tb,  2);
-		sc = rv_rorw(sm ^ tb, 21);
-		sm = rv_rorw(sn ^ tc, 39);
-		sn = rv_rorw(st ^ td, 56);
-		st = rv_rorw(sx ^ tc,  8);
-		sx = rv_rorw(sp ^ te, 23);
-		sp = rv_rorw(se ^ td, 37);
-		se = rv_rorw(sy ^ td, 50);
-		sy = rv_rorw(sv ^ ta, 62);
-		sv = rv_rorw(si ^ tc,  9);
-		si = rv_rorw(sq ^ ta, 19);
-		sq = rv_rorw(sf ^ te, 28);
-		sf = rv_rorw(sd ^ tc, 36);
-		sd = rv_rorw(ss ^ tc, 43);
-		ss = rv_rorw(sr ^ tb, 49);
-		sr = rv_rorw(sl ^ ta, 54);
-		sl = rv_rorw(sh ^ tb, 58);
-		sh = rv_rorw(sk ^ te, 61);
-		sk = u;
+		t  = rv_rorw(sb, 63);
+		sb = rv_rorw(sg, 20);
+		sg = rv_rorw(sj, 44);
+		sj = rv_rorw(sw,  3);
+		sw = rv_rorw(so, 25);
+		so = rv_rorw(su, 46);
+		su = rv_rorw(sc,  2);
+		sc = rv_rorw(sm, 21);
+		sm = rv_rorw(sn, 39);
+		sn = rv_rorw(st, 56);
+		st = rv_rorw(sx,  8);
+		sx = rv_rorw(sp, 23);
+		sp = rv_rorw(se, 37);
+		se = rv_rorw(sy, 50);
+		sy = rv_rorw(sv, 62);
+		sv = rv_rorw(si,  9);
+		si = rv_rorw(sq, 19);
+		sq = rv_rorw(sf, 28);
+		sf = rv_rorw(sd, 36);
+		sd = rv_rorw(ss, 43);
+		ss = rv_rorw(sr, 49);
+		sr = rv_rorw(sl, 54);
+		sl = rv_rorw(sh, 58);
+		sh = rv_rorw(sk, 61);
+		sk = t;
 
 		//	Chi
 
-		u  = rv_andn(sd, se);
+		t  = rv_andn(sd, se);
 		se = se ^ rv_andn(sa, sb);
 		sb = sb ^ rv_andn(sc, sd);
 		sd = sd ^ rv_andn(se, sa);
 		sa = sa ^ rv_andn(sb, sc);
-		sc = sc ^ u;
+		sc = sc ^ t;
 
-		u  = rv_andn(si, sj);
+		t  = rv_andn(si, sj);
 		sj = sj ^ rv_andn(sf, sg);
 		sg = sg ^ rv_andn(sh, si);
 		si = si ^ rv_andn(sj, sf);
 		sf = sf ^ rv_andn(sg, sh);
-		sh = sh ^ u;
+		sh = sh ^ t;
 
-		u  = rv_andn(sn, so);
+		t  = rv_andn(sn, so);
 		so = so ^ rv_andn(sk, sl);
 		sl = sl ^ rv_andn(sm, sn);
 		sn = sn ^ rv_andn(so, sk);
 		sk = sk ^ rv_andn(sl, sm);
-		sm = sm ^ u;
+		sm = sm ^ t;
 
-		u  = rv_andn(ss, st);
+		t  = rv_andn(ss, st);
 		st = st ^ rv_andn(sp, sq);
 		sq = sq ^ rv_andn(sr, ss);
 		ss = ss ^ rv_andn(st, sp);
 		sp = sp ^ rv_andn(sq, sr);
-		sr = sr ^ u;
+		sr = sr ^ t;
 
-		u  = rv_andn(sx, sy);
+		t  = rv_andn(sx, sy);
 		sy = sy ^ rv_andn(su, sv);
 		sv = sv ^ rv_andn(sw, sx);
 		sx = sx ^ rv_andn(sy, su);
 		su = su ^ rv_andn(sv, sw);
-		sw = sw ^ u;
+		sw = sw ^ t;
 
 		//	Iota
 
