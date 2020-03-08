@@ -18,6 +18,77 @@
 
 //	Keccak-p[1600,24](S)
 
+//	parity on a column
+
+uint32_t kp_par5(uint32_t *v)
+{
+	return	v[ 0] ^ v[10] ^ v[20] ^ v[30] ^ v[40];
+}
+
+//	xor on a column
+
+void kp_xor10(uint32_t *v, uint32_t x0, uint32_t x1)
+{
+	v[ 0] = v[ 0] ^ x0;
+	v[ 1] = v[ 1] ^ x1;
+	v[10] = v[10] ^ x0;
+	v[11] = v[11] ^ x1;
+	v[20] = v[20] ^ x0;
+	v[21] = v[21] ^ x1;
+	v[30] = v[30] ^ x0;
+	v[31] = v[31] ^ x1;
+	v[40] = v[40] ^ x0;
+	v[41] = v[41] ^ x1;
+}
+
+//	chi function on a 32-bit slice
+
+void kp_chi5(uint32_t *v)
+{
+	uint32_t t, a, b, c, d, e;
+
+	a = v[ 0];	b = v[ 2];	c = v[ 4];	d = v[ 6];	e = v[ 8];
+
+	t  = rv_andn(e, d);
+	e = e ^ rv_andn(b, a);
+	b = b ^ rv_andn(d, c);
+	d = d ^ rv_andn(a, e);
+	a = a ^ rv_andn(c, b);
+	c = c ^ t;
+
+	v[ 0] = a;	v[ 2] = b;	v[ 4] = c;	v[ 6] = d;	v[ 8] = e;
+}
+
+//	interleave the state
+
+void kp_intrlv50(uint32_t v[50])
+{
+	int i;
+	uint32_t t0, t1;
+
+	for (i = 0; i < 50; i += 2) {
+		t0 		 = 	v[i];
+		t1 		 = 	v[i + 1];
+		v[i] 	 = 	intrlv0(t0, t1);
+		v[i + 1] = 	intrlv1(t0, t1);
+	}
+}
+
+//	un-interleave the state
+
+void kp_untrlv50(uint32_t v[50])
+{
+	int i;
+	uint32_t t0, t1;
+
+	for (i = 0; i < 50; i += 2) {
+		t0 		 = 	v[i];
+		t1 		 = 	v[i + 1];
+		v[i] 	 = 	untrlvl(t0, t1);
+		v[i + 1] = 	untrlvh(t0, t1);
+	}
+}
+
 void rv32_keccakp(void *s)
 {
 	//	round constants
@@ -32,65 +103,51 @@ void rv32_keccakp(void *s)
 		0x8000000000008080, 0x0000000080000001, 0x8000000080008008
 	};
 
-	int i;
-	uint64_t	t, u, v, w;
+	int 		i, j;
+	uint64_t	t;
 	uint64_t	sa, sb, sc, sd, se, sf, sg, sh, si, sj, sk, sl, sm,
 				sn, so, sp, sq, sr, ss, st, su, sv, sw, sx, sy;
 
 	//	load state, little endian, aligned
 
-	uint64_t	*vs = (uint64_t *) s;
-	sa = vs[ 0]; sb = vs[ 1]; sc = vs[ 2]; sd = vs[ 3]; se = vs[ 4];
-	sf = vs[ 5]; sg = vs[ 6]; sh = vs[ 7]; si = vs[ 8]; sj = vs[ 9];
-	sk = vs[10]; sl = vs[11]; sm = vs[12]; sn = vs[13]; so = vs[14];
-	sp = vs[15]; sq = vs[16]; sr = vs[17]; ss = vs[18]; st = vs[19];
-	su = vs[20]; sv = vs[21]; sw = vs[22]; sx = vs[23]; sy = vs[24];
+	uint32_t	*vs = (uint32_t *) s;
+	uint64_t	*ts = (uint64_t *) s;
+
+	uint32_t	xa0, xa1, xb0, xb1, xc0, xc1, xd0, xd1, xe0, xe1;
 
 	//	iteration
 
 	for (i = 0; i < 24; i++) {
 
-		//	Theta Rho Pi
+		kp_intrlv50(vs);
 
-		u = sa ^ sf ^ sk ^ sp ^ su;
-		v = sb ^ sg ^ sl ^ sq ^ sv;
-		w = se ^ sj ^ so ^ st ^ sy;
-		t = w ^ rv_rorw(v, 63);
-		sa = sa ^ t;
-		sf = sf ^ t;
-		sk = sk ^ t;
-		sp = sp ^ t;
-		su = su ^ t;
+		//	Theta
+		xa0 = kp_par5(&vs[ 0]);
+		xa1 = kp_par5(&vs[ 1]);
+		xb0 = kp_par5(&vs[ 2]);
+		xb1 = kp_par5(&vs[ 3]);
+		xc0 = kp_par5(&vs[ 4]);
+		xc1 = kp_par5(&vs[ 5]);
+		xd0 = kp_par5(&vs[ 6]);
+		xd1 = kp_par5(&vs[ 7]);
+		xe0 = kp_par5(&vs[ 8]);
+		xe1 = kp_par5(&vs[ 9]);
 
-		t = sd ^ si ^ sn ^ ss ^ sx;
-		v = v ^ rv_rorw(t, 63);
-		t = t ^ rv_rorw(u, 63);
-		se = se ^ t;
-		sj = sj ^ t;
-		so = so ^ t;
-		st = st ^ t;
-		sy = sy ^ t;
+		kp_xor10(&vs[ 0], xe0 ^ rv_ror(xb1, 31), xe1 ^ xb0);
+		kp_xor10(&vs[ 2], xa0 ^ rv_ror(xc1, 31), xa1 ^ xc0);
+		kp_xor10(&vs[ 4], xb0 ^ rv_ror(xd1, 31), xb1 ^ xd0);
+		kp_xor10(&vs[ 6], xc0 ^ rv_ror(xe1, 31), xc1 ^ xe0);
+		kp_xor10(&vs[ 8], xd0 ^ rv_ror(xa1, 31), xd1 ^ xa0);
 
-		t = sc ^ sh ^ sm ^ sr ^ sw;
-		u = u ^ rv_rorw(t, 63);
-		t = t ^ rv_rorw(w, 63);
-		sc = sc ^ v;
-		sh = sh ^ v;
-		sm = sm ^ v;
-		sr = sr ^ v;
-		sw = sw ^ v;
+		kp_untrlv50(vs);
 
-		sb = sb ^ u;
-		sg = sg ^ u;
-		sl = sl ^ u;
-		sq = sq ^ u;
-		sv = sv ^ u;
+	sa = ts[ 0]; sb = ts[ 1]; sc = ts[ 2]; sd = ts[ 3]; se = ts[ 4];
+	sf = ts[ 5]; sg = ts[ 6]; sh = ts[ 7]; si = ts[ 8]; sj = ts[ 9];
+	sk = ts[10]; sl = ts[11]; sm = ts[12]; sn = ts[13]; so = ts[14];
+	sp = ts[15]; sq = ts[16]; sr = ts[17]; ss = ts[18]; st = ts[19];
+	su = ts[20]; sv = ts[21]; sw = ts[22]; sx = ts[23]; sy = ts[24];
 
-		sd = sd ^ t;
-		si = si ^ t;
-		sn = sn ^ t;
-		ss = ss ^ t;
-		sx = sx ^ t;
+		//	Rho Pi
 
 		t  = rv_rorw(sb, 63);
 		sb = rv_rorw(sg, 20);
@@ -118,56 +175,36 @@ void rv32_keccakp(void *s)
 		sh = rv_rorw(sk, 61);
 		sk = t;
 
+	//	store state
+	ts[ 0] = sa; ts[ 1] = sb; ts[ 2] = sc; ts[ 3] = sd; ts[ 4] = se;
+	ts[ 5] = sf; ts[ 6] = sg; ts[ 7] = sh; ts[ 8] = si; ts[ 9] = sj;
+	ts[10] = sk; ts[11] = sl; ts[12] = sm; ts[13] = sn; ts[14] = so;
+	ts[15] = sp; ts[16] = sq; ts[17] = sr; ts[18] = ss; ts[19] = st;
+	ts[20] = su; ts[21] = sv; ts[22] = sw; ts[23] = sx; ts[24] = sy;
+
 		//	Chi
 
-		t  = rv_andn(se, sd);
-		se = se ^ rv_andn(sb, sa);
-		sb = sb ^ rv_andn(sd, sc);
-		sd = sd ^ rv_andn(sa, se);
-		sa = sa ^ rv_andn(sc, sb);
-		sc = sc ^ t;
+		kp_intrlv50(vs);
 
-		t  = rv_andn(sj, si);
-		sj = sj ^ rv_andn(sg, sf);
-		sg = sg ^ rv_andn(si, sh);
-		si = si ^ rv_andn(sf, sj);
-		sf = sf ^ rv_andn(sh, sg);
-		sh = sh ^ t;
+		kp_chi5(&vs[ 0]);
+		kp_chi5(&vs[ 1]);
+		kp_chi5(&vs[10]);
+		kp_chi5(&vs[11]);
+		kp_chi5(&vs[20]);
+		kp_chi5(&vs[21]);
+		kp_chi5(&vs[30]);
+		kp_chi5(&vs[31]);
+		kp_chi5(&vs[40]);
+		kp_chi5(&vs[41]);
 
-		t  = rv_andn(so, sn);
-		so = so ^ rv_andn(sl, sk);
-		sl = sl ^ rv_andn(sn, sm);
-		sn = sn ^ rv_andn(sk, so);
-		sk = sk ^ rv_andn(sm, sl);
-		sm = sm ^ t;
+		kp_untrlv50(vs);
 
-		t  = rv_andn(st, ss);
-		st = st ^ rv_andn(sq, sp);
-		sq = sq ^ rv_andn(ss, sr);
-		ss = ss ^ rv_andn(sp, st);
-		sp = sp ^ rv_andn(sr, sq);
-		sr = sr ^ t;
-
-		t  = rv_andn(sy, sx);
-		sy = sy ^ rv_andn(sv, su);
-		sv = sv ^ rv_andn(sx, sw);
-		sx = sx ^ rv_andn(su, sy);
-		su = su ^ rv_andn(sw, sv);
-		sw = sw ^ t;
-
-		//	Iota
-
-		sa = sa ^ rc[i];
-	}
-
-	//	store state
-
-	vs[ 0] = sa; vs[ 1] = sb; vs[ 2] = sc; vs[ 3] = sd; vs[ 4] = se;
-	vs[ 5] = sf; vs[ 6] = sg; vs[ 7] = sh; vs[ 8] = si; vs[ 9] = sj;
-	vs[10] = sk; vs[11] = sl; vs[12] = sm; vs[13] = sn; vs[14] = so;
-	vs[15] = sp; vs[16] = sq; vs[17] = sr; vs[18] = ss; vs[19] = st;
-	vs[20] = su; vs[21] = sv; vs[22] = sw; vs[23] = sx; vs[24] = sy;
+		ts[ 0] ^= rc[i];
+	
+	}	
 }
+
+
 
 
 
@@ -255,7 +292,4 @@ int gvk()
 
 	return 0;
 }
-
-
-
 

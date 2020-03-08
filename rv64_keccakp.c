@@ -38,7 +38,7 @@ void rv64_keccakp(void *s)
 
 	for (i = 0; i < 24; i++) {
 
-		//	Theta Rho Pi
+		//	Theta 
 
 		u = sa ^ sf ^ sk ^ sp ^ su;
 		v = sb ^ sg ^ sl ^ sq ^ sv;
@@ -79,6 +79,8 @@ void rv64_keccakp(void *s)
 		sn = sn ^ t;
 		ss = ss ^ t;
 		sx = sx ^ t;
+
+		//	Rho Pi
 
 		t  = rv_rorw(sb, 63);
 		sb = rv_rorw(sg, 20);
