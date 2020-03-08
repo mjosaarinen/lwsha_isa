@@ -7,60 +7,17 @@
 #include "insns.h"
 #include "sha3.h"
 
-
-//	parity on a column
-
-uint32_t kp_par5(uint32_t *v)
-{
-	return	v[ 0] ^ v[10] ^ v[20] ^ v[30] ^ v[40];
-}
-
-//	xor on a column
-
-void kp_xor10(uint32_t *v, uint32_t x0, uint32_t x1)
-{
-	v[ 0] = v[ 0] ^ x0;
-	v[ 1] = v[ 1] ^ x1;
-	v[10] = v[10] ^ x0;
-	v[11] = v[11] ^ x1;
-	v[20] = v[20] ^ x0;
-	v[21] = v[21] ^ x1;
-	v[30] = v[30] ^ x0;
-	v[31] = v[31] ^ x1;
-	v[40] = v[40] ^ x0;
-	v[41] = v[41] ^ x1;
-}
-
-//	chi function on a 32-bit slice
-
-void kp_chi5(uint32_t *v)
-{
-	uint32_t t, a, b, c, d, e;
-
-	a = v[ 0];	b = v[ 2];	c = v[ 4];	d = v[ 6];	e = v[ 8];
-
-	t  = rv_andn(e, d);
-	e = e ^ rv_andn(b, a);
-	b = b ^ rv_andn(d, c);
-	d = d ^ rv_andn(a, e);
-	a = a ^ rv_andn(c, b);
-	c = c ^ t;
-
-	v[ 0] = a;	v[ 2] = b;	v[ 4] = c;	v[ 6] = d;	v[ 8] = e;
-}
-
 //	interleave the state (for input)
 
 void kp_intrlv50(uint32_t v[50])
 {
-	int i;
-	uint32_t t0, t1;
+	uint32_t t0, t1, *p;
 
-	for (i = 0; i < 50; i += 2) {
-		t0 		 = 	v[i];
-		t1 		 = 	v[i + 1];
-		v[i] 	 = 	intrlv0(t0, t1);
-		v[i + 1] = 	intrlv1(t0, t1);
+	for (p = v; p != &v[50]; p += 2) {
+		t0		=	p[0];
+		t1		=	p[1];
+		p[0]	=	intrlv0(t0, t1);
+		p[1]	=	intrlv1(t0, t1);
 	}
 }
 
@@ -68,14 +25,13 @@ void kp_intrlv50(uint32_t v[50])
 
 void kp_untrlv50(uint32_t v[50])
 {
-	int i;
-	uint32_t t0, t1;
+	uint32_t t0, t1, *p;
 
-	for (i = 0; i < 50; i += 2) {
-		t0 		 = 	v[i];
-		t1 		 = 	v[i + 1];
-		v[i] 	 = 	untrlvl(t0, t1);
-		v[i + 1] = 	untrlvh(t0, t1);
+	for (p = v; p != &v[50]; p += 2) {
+		t0		=	p[0];
+		t1		=	p[1];
+		p[0]	=	untrlvl(t0, t1);
+		p[1]	=	untrlvh(t0, t1);
 	}
 }
 
@@ -99,107 +55,115 @@ void rv32_keccakp(void *s)
 		0x00008000, 0x00000000, 0x80008082
 	};
 
-	int 		i;
 	uint32_t	t0, t1, t2, t3, t4, t5, t6, t7, t8, t9;
-	uint32_t	*vs = (uint32_t *) s;
+	uint32_t	u0, u1, u2, u3;
+	const uint32_t *q;
+	uint32_t	*p;
+	uint32_t	*v = (uint32_t *) s;
 
 	//	interleave the state (this can be outside the function)
-	kp_intrlv50(vs);
+	kp_intrlv50(v);
+
+	//	(passed between rounds, initial load)
+
+	u0 = v[40]; u1 = v[41]; t2 = v[42]; t3 = v[43]; t4 = v[44];
+	t5 = v[45]; t6 = v[46]; t7 = v[47]; t8 = v[48]; t9 = v[49];
 
 	//	24 rounds
-	for (i = 0; i < 48; i += 2) {
+
+	for (q = rc; q != &rc[48]; q += 2) {
 
 		//	Theta
+		for (p = v; p != &v[40]; p += 10) {
+			u0 = u0 ^ p[0];			u1 = u1 ^ p[1];
+			t2 = t2 ^ p[2];			t3 = t3 ^ p[3];
+			t4 = t4 ^ p[4];			t5 = t5 ^ p[5];
+			t6 = t6 ^ p[6];			t7 = t7 ^ p[7];
+			t8 = t8 ^ p[8];			t9 = t9 ^ p[9];
+		}
 
-		t0 = kp_par5(&vs[ 0]);
-		t1 = kp_par5(&vs[ 1]);
-		t2 = kp_par5(&vs[ 2]);
-		t3 = kp_par5(&vs[ 3]);
-		t4 = kp_par5(&vs[ 4]);
-		t5 = kp_par5(&vs[ 5]);
-		t6 = kp_par5(&vs[ 6]);
-		t7 = kp_par5(&vs[ 7]);
-		t8 = kp_par5(&vs[ 8]);
-		t9 = kp_par5(&vs[ 9]);
+		t0 = u0 ^ rv_ror(t5, 31);	t1 = u1 ^ t4;
+		t4 = t4 ^ rv_ror(t9, 31);	t5 = t5 ^ t8;
+		t8 = t8 ^ rv_ror(t3, 31);	t9 = t9 ^ t2;
+		t2 = t2 ^ rv_ror(t7, 31);	t3 = t3 ^ t6;
+		t6 = t6 ^ rv_ror(u1, 31);	t7 = t7 ^ u0;
 
-		kp_xor10(&vs[ 0], t8 ^ rv_ror(t3, 31), t9 ^ t2);
-		kp_xor10(&vs[ 2], t0 ^ rv_ror(t5, 31), t1 ^ t4);
-		kp_xor10(&vs[ 4], t2 ^ rv_ror(t7, 31), t3 ^ t6);
-		kp_xor10(&vs[ 6], t4 ^ rv_ror(t9, 31), t5 ^ t8);
-		kp_xor10(&vs[ 8], t6 ^ rv_ror(t1, 31), t7 ^ t0);
+		//	(Theta) Rho Pi
 
-		//	Rho Pi
-
-		t2 = vs[ 2]; t3 = vs[ 3];
-		t0 = vs[12]; t1 = vs[13];
-		vs[ 2] = rv_ror(t0, 10); vs[ 3] = rv_ror(t1, 10);
-		t0 = vs[18]; t1 = vs[19];
-		vs[12] = rv_ror(t0, 22); vs[13] = rv_ror(t1, 22);
-		t0 = vs[44]; t1 = vs[45];
-		vs[18] = rv_ror(t1,  1); vs[19] = rv_ror(t0,  2);
-		t0 = vs[28]; t1 = vs[29];
-		vs[44] = rv_ror(t1, 12); vs[45] = rv_ror(t0, 13);
-		t0 = vs[40]; t1 = vs[41];
-		vs[28] = rv_ror(t0, 23); vs[29] = rv_ror(t1, 23);
-		t0 = vs[ 4]; t1 = vs[ 5];
-		vs[40] = rv_ror(t0,  1); vs[41] = rv_ror(t1,  1);
-		t0 = vs[24]; t1 = vs[25];
-		vs[ 4] = rv_ror(t1, 10); vs[ 5] = rv_ror(t0, 11);
-		t0 = vs[26]; t1 = vs[27];
-		vs[24] = rv_ror(t1, 19); vs[25] = rv_ror(t0, 20);
-		t0 = vs[38]; t1 = vs[39];
-		vs[26] = rv_ror(t0, 28); vs[27] = rv_ror(t1, 28);
-		t0 = vs[46]; t1 = vs[47];
-		vs[38] = rv_ror(t0,  4); vs[39] = rv_ror(t1,  4);
-		t0 = vs[30]; t1 = vs[31]; 
-		vs[46] = rv_ror(t1, 11); vs[47] = rv_ror(t0, 12);
-		t0 = vs[ 8]; t1 = vs[ 9];
-		vs[30] = rv_ror(t1, 18); vs[31] = rv_ror(t0, 19);
-		t0 = vs[48]; t1 = vs[49];
-		vs[ 8] = rv_ror(t0, 25); vs[ 9] = rv_ror(t1, 25);
-		t0 = vs[42]; t1 = vs[43];
-		vs[48] = rv_ror(t0, 31); vs[49] = rv_ror(t1, 31);
-		t0 = vs[16]; t1 = vs[17];
-		vs[42] = rv_ror(t1,  4); vs[43] = rv_ror(t0,  5);
-		t0 = vs[32]; t1 = vs[33];
-		vs[16] = rv_ror(t1,  9); vs[17] = rv_ror(t0, 10);
-		t0 = vs[10]; t1 = vs[11];
-		vs[32] = rv_ror(t0, 14); vs[33] = rv_ror(t1, 14);
-		t0 = vs[ 6]; t1 = vs[ 7];
-		vs[10] = rv_ror(t0, 18); vs[11] = rv_ror(t1, 18);
-		t0 = vs[36]; t1 = vs[37];
-		vs[ 6] = rv_ror(t1, 21); vs[ 7] = rv_ror(t0, 22);
-		t0 = vs[34]; t1 = vs[35];
-		vs[36] = rv_ror(t1, 24); vs[37] = rv_ror(t0, 25);
-		t0 = vs[22]; t1 = vs[23];
-		vs[34] = rv_ror(t0, 27); vs[35] = rv_ror(t1, 27);
-		t0 = vs[14]; t1 = vs[15];
-		vs[22] = rv_ror(t0, 29); vs[23] = rv_ror(t1, 29);
-		t0 = vs[20]; t1 = vs[21];
-		vs[14] = rv_ror(t1, 30); vs[15] = rv_ror(t0, 31);
-		vs[20] = rv_ror(t3, 31); vs[21] = t2;
+		u0 = v[ 0] ^ t8;			u1 = v[1] ^ t9;
+		v[ 0] = u0;					v[1] = u1;
+		u2 = v[ 2] ^ t0;			u3 = v[ 3] ^ t1;
+		u0 = v[12] ^ t0;			u1 = v[13] ^ t1;
+		v[ 2] = rv_ror(u0, 10);		v[ 3] = rv_ror(u1, 10);
+		u0 = v[18] ^ t6;			u1 = v[19] ^ t7;
+		v[12] = rv_ror(u0, 22);		v[13] = rv_ror(u1, 22);
+		u0 = v[44] ^ t2;			u1 = v[45] ^ t3;
+		v[18] = rv_ror(u1,	1);		v[19] = rv_ror(u0,	2);
+		u0 = v[28] ^ t6;			u1 = v[29] ^ t7;
+		v[44] = rv_ror(u1, 12);		v[45] = rv_ror(u0, 13);
+		u0 = v[40] ^ t8;			u1 = v[41] ^ t9;
+		v[28] = rv_ror(u0, 23);		v[29] = rv_ror(u1, 23);
+		u0 = v[ 4] ^ t2;			u1 = v[ 5] ^ t3;
+		v[40] = rv_ror(u0,	1);		v[41] = rv_ror(u1,	1);
+		u0 = v[24] ^ t2;			u1 = v[25] ^ t3;
+		v[ 4] = rv_ror(u1, 10);		v[ 5] = rv_ror(u0, 11);
+		u0 = v[26] ^ t4;			u1 = v[27] ^ t5;
+		v[24] = rv_ror(u1, 19);		v[25] = rv_ror(u0, 20);
+		u0 = v[38] ^ t6;			u1 = v[39] ^ t7;
+		v[26] = rv_ror(u0, 28);		v[27] = rv_ror(u1, 28);
+		u0 = v[46] ^ t4;			u1 = v[47] ^ t5;
+		v[38] = rv_ror(u0,	4);		v[39] = rv_ror(u1,	4);
+		u0 = v[30] ^ t8;			u1 = v[31] ^ t9;
+		v[46] = rv_ror(u1, 11);		v[47] = rv_ror(u0, 12);
+		u0 = v[ 8] ^ t6;			u1 = v[ 9] ^ t7;
+		v[30] = rv_ror(u1, 18);		v[31] = rv_ror(u0, 19);
+		u0 = v[48] ^ t6;			u1 = v[49] ^ t7;
+		v[ 8] = rv_ror(u0, 25);		v[ 9] = rv_ror(u1, 25);
+		u0 = v[42] ^ t0;			u1 = v[43] ^ t1;
+		v[48] = rv_ror(u0, 31);		v[49] = rv_ror(u1, 31);
+		u0 = v[16] ^ t4;			u1 = v[17] ^ t5;
+		v[42] = rv_ror(u1,	4);		v[43] = rv_ror(u0,	5);
+		u0 = v[32] ^ t0;			u1 = v[33] ^ t1;
+		v[16] = rv_ror(u1,	9);		v[17] = rv_ror(u0, 10);
+		u0 = v[10] ^ t8;			u1 = v[11] ^ t9;
+		v[32] = rv_ror(u0, 14);		v[33] = rv_ror(u1, 14);
+		u0 = v[ 6] ^ t4;			u1 = v[ 7] ^ t5;
+		v[10] = rv_ror(u0, 18);		v[11] = rv_ror(u1, 18);
+		u0 = v[36] ^ t4;			u1 = v[37] ^ t5;
+		v[ 6] = rv_ror(u1, 21);		v[ 7] = rv_ror(u0, 22);
+		u0 = v[34] ^ t2;			u1 = v[35] ^ t3;
+		v[36] = rv_ror(u1, 24);		v[37] = rv_ror(u0, 25);
+		u0 = v[22] ^ t0;			u1 = v[23] ^ t1;
+		v[34] = rv_ror(u0, 27);		v[35] = rv_ror(u1, 27);
+		u0 = v[14] ^ t2;			u1 = v[15] ^ t3;
+		v[22] = rv_ror(u0, 29);		v[23] = rv_ror(u1, 29);
+		u0 = v[20] ^ t8;			u1 = v[21] ^ t9;
+		v[14] = rv_ror(u1, 30);		v[15] = rv_ror(u0, 31);
+		v[20] = rv_ror(u3, 31);		v[21] = u2;
 
 		//	Chi
 
-		kp_chi5(&vs[ 0]);
-		kp_chi5(&vs[ 1]);
-		kp_chi5(&vs[10]);
-		kp_chi5(&vs[11]);
-		kp_chi5(&vs[20]);
-		kp_chi5(&vs[21]);
-		kp_chi5(&vs[30]);
-		kp_chi5(&vs[31]);
-		kp_chi5(&vs[40]);
-		kp_chi5(&vs[41]);
+		for (p = v; p <= &v[40]; p += 10) {
+			u0 = p[0];	t2 = p[2];	t4 = p[4];	t6 = p[6];	t8 = p[8];
+			u1 = p[1];	t3 = p[3];	t5 = p[5];	t7 = p[7];	t9 = p[9];
+			t0 = rv_andn(t8, t6);		t1 = rv_andn(t9, t7);
+			t8 = t8 ^ rv_andn(t2, u0);	t9 = t9 ^ rv_andn(t3, u1);
+			t2 = t2 ^ rv_andn(t6, t4);	t3 = t3 ^ rv_andn(t7, t5);
+			t6 = t6 ^ rv_andn(u0, t8);	t7 = t7 ^ rv_andn(u1, t9);
+			u0 = u0 ^ rv_andn(t4, t2);	u1 = u1 ^ rv_andn(t5, t3);
+			t4 = t4 ^ t0;				t5 = t5 ^ t1;
+			p[0] = u0;	p[2] = t2;	p[4] = t4;	p[6] = t6;	p[8] = t8;
+			p[1] = u1;	p[3] = t3;	p[5] = t5;	p[7] = t7;	p[9] = t9;
+		}
 
 		//	Iota
 
-		t0 = vs[ 0]; t1 = vs[ 1];
-		vs[ 0] = t0 ^ rc[i]; vs[ 1] = t1 ^ rc[i + 1]; 
-	}	
+		t0 = v[ 0]; t1 = v[ 1];
+		v[ 0] = t0 ^ q[0];	v[ 1] = t1 ^ q[1];
+	}
 
 	//	un-interleave (this can be outside the function)
 
-	kp_untrlv50(vs);
+	kp_untrlv50(v);
 }
 

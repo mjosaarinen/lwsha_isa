@@ -38,7 +38,7 @@ void rv64_keccakp(void *s)
 
 	for (i = 0; i < 24; i++) {
 
-		//	Theta 
+		//	Theta
 
 		u = sa ^ sf ^ sk ^ sp ^ su;
 		v = sb ^ sg ^ sl ^ sq ^ sv;
