@@ -6,22 +6,45 @@
 
 #include "sha3.h"
 
+//	test the permutation
+
+int test_keccakp()
+{
+	int i;
+	uint8_t st[200];
+	int fail = 0;
+
+	memset(st, 0, sizeof(st));
+	for (i = 0; i < 25; i++) {
+		st[8 * i] = i;
+	}
+	sha3_keccakp(st);
+
+	fail += chkhex("KECCAK-P", st, sizeof(st),
+		"1581ED5252B07483009456B676A6F71D7D79518A4B1965F7450576D1437B4720"
+		"6A60F6F3A48B5FD193D48D7C4F14D7A13FFD38519693D130BEE31B9572947E48"
+		"5A7ADACB58A8F30C887FB19B384EE52F8F269F0DDE38730B7F6D258BF5DFEF55"
+		"6A3E2CEB943E35C8111F908C94F62A2EA69D30CA0CDE73E8E2314D946CC2AFF7"
+		"D715C48C80EAF5A0CFD83E7E4331F55321D2A4433B1F7F7785E999B43CA60CFD"
+		"3023D1C5C055C0D4DFA7E0A68AE52FA7A348997C93F51A42880834713010165E"
+		"334A7E293AF453D1");
+
+	return fail;
+};
+
 //	simple test for SHA-3
 
 //	message / digest pairs, lifted from ShortMsgKAT_SHA3-xxx.txt files
 //	in the official package: https://github.com/gvanas/KeccakCodePackage
 
 static const char *sha3_tv[][3] = {
-	{
-		"SHA3-224",		//	corner case with 0-length message
+	{	"SHA3-224",		//	corner case with 0-length message
 		"",
-		"6B4E03423667DBB73B6E15454F0EB1ABD4597F9A1B078E3F5B5A6BC7"
-	}, {	
-		"SHA3-256",		//	short message
+		"6B4E03423667DBB73B6E15454F0EB1ABD4597F9A1B078E3F5B5A6BC7" }, 
+	{	"SHA3-256",		//	short message
 		"9F2FCC7C90DE090D6B87CD7E9718C1EA6CB21118FC2D5DE9F97E5DB6AC1E9C10",
-		"2F1A5F7159E34EA19CDDC70EBF9B81F1A66DB40615D7EAD3CC1F1B954D82A3AF"
-	}, {
-		"SHA3-384",		//	exact block size
+		"2F1A5F7159E34EA19CDDC70EBF9B81F1A66DB40615D7EAD3CC1F1B954D82A3AF" }, 
+	{	"SHA3-384",		//	exact block size
 		"E35780EB9799AD4C77535D4DDB683CF33EF367715327CF4C4A58ED9CBDCDD486"
 		"F669F80189D549A9364FA82A51A52654EC721BB3AAB95DCEB4A86A6AFA93826D"
 		"B923517E928F33E3FBA850D45660EF83B9876ACCAFA2A9987A254B137C6E140A"
@@ -62,28 +85,24 @@ int test_sha3()
 	return fail;
 }
 
-// test for SHAKE128 and SHAKE256
+//	test for SHAKE128 and SHAKE256
+
+//	Test vectors have bytes 480..511 of XOF output for given inputs.
+//	From http://csrc.nist.gov/groups/ST/toolkit/examples.html#aHashing
 
 static const char *shake_tv[4][2] =	 {
-	{
-		"SHAKE128",	// SHAKE128, message of length 0
-		"43E41B45A653F2A5C4492C1ADD544512DDA2529833462B71A41A45BE97290B6F",
-	}, {
-		"SHAKE256",	// SHAKE256, message of length 0
-		"AB0BAE316339894304E35877B0C28A9B1FD166C796B9CC258A064A8F57E27F2A",
-	}, {
-		"SHAKE128",	// SHAKE128, 1600-bit test pattern
-		"44C9FB359FD56AC0A9A75A743CFF6862F17D7259AB075216C0699511643B6439",
-	}, {
-		"SHAKE256",	// SHAKE256, 1600-bit test pattern
-		"6A1A9D7846436E4DCA5728B6F760EEF0CA92BF0BE5615E96959D767197A0BEEB"
-	}
+	{	"SHAKE128",	// SHAKE128, message of length 0
+		"43E41B45A653F2A5C4492C1ADD544512DDA2529833462B71A41A45BE97290B6F" },
+	{	"SHAKE256",	// SHAKE256, message of length 0
+		"AB0BAE316339894304E35877B0C28A9B1FD166C796B9CC258A064A8F57E27F2A" }, 
+	{	"SHAKE128",	// SHAKE128, 1600-bit test pattern
+		"44C9FB359FD56AC0A9A75A743CFF6862F17D7259AB075216C0699511643B6439" }, 
+	{	"SHAKE256",	// SHAKE256, 1600-bit test pattern
+		"6A1A9D7846436E4DCA5728B6F760EEF0CA92BF0BE5615E96959D767197A0BEEB" }
 };
 
 int test_shake()
 {
-	// Test vectors have bytes 480..511 of XOF output for given inputs.
-	// From http://csrc.nist.gov/groups/ST/toolkit/examples.html#aHashing
 
 
 	int i, j, fail;
@@ -119,19 +138,17 @@ int test_shake()
 	return fail;
 }
 
-int gek();
-int bools();
 
 // main
 int main(int argc, char **argv)
 {
 	sha3_keccakp = rv32_keccakp;
-/*
-	if (test_sha3() != 0 || test_shake() != 0) {
+
+	if (test_keccakp() != 0 ||
+		test_sha3() != 0 || 
+		test_shake() != 0) {
 		printf("[FAIL] Self-Test FAILED!\n");
 	}
-*/
-	gek();
 
 	return 0;
 }
