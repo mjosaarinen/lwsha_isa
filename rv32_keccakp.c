@@ -7,7 +7,6 @@
 #include "insns.h"
 #include "sha3.h"
 
-//	Keccak-p[1600,24](S)
 
 //	parity on a column
 
@@ -80,8 +79,13 @@ void kp_untrlv50(uint32_t v[50])
 	}
 }
 
+//	Keccak-p[1600,24](S)
+
 void rv32_keccakp(void *s)
 {
+
+	//	round constants (interleaved)
+
 	const uint32_t rc[48] = {
 		0x00000001, 0x00000000, 0x00000000, 0x00000089, 0x00000000,
 		0x8000008B, 0x00000000, 0x80008080, 0x00000001, 0x0000008B,
@@ -95,19 +99,18 @@ void rv32_keccakp(void *s)
 		0x00008000, 0x00000000, 0x80008082
 	};
 
-	//	load state, little endian, aligned
-
 	int 		i;
 	uint32_t	t0, t1, t2, t3, t4, t5, t6, t7, t8, t9;
 	uint32_t	*vs = (uint32_t *) s;
 
-	//	interleave the state
+	//	interleave the state (this can be outside the function)
 	kp_intrlv50(vs);
 
 	//	24 rounds
 	for (i = 0; i < 48; i += 2) {
 
 		//	Theta
+
 		t0 = kp_par5(&vs[ 0]);
 		t1 = kp_par5(&vs[ 1]);
 		t2 = kp_par5(&vs[ 2]);
@@ -195,7 +198,7 @@ void rv32_keccakp(void *s)
 		vs[ 0] = t0 ^ rc[i]; vs[ 1] = t1 ^ rc[i + 1]; 
 	}	
 
-	//	un-interleave
+	//	un-interleave (this can be outside the function)
 
 	kp_untrlv50(vs);
 }
