@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include "sha3.h"
 
-//	simple "reference" permutation
+//	Simple and slow "reference" permutation.
 
 #ifndef ROTL64
 #define ROTL64(x, y) (((x) << (y)) | ((x) >> (64 - (y))))
@@ -48,12 +48,12 @@ void ref_keccakp(void *s)
 			(((uint64_t) v[6]) << 48) | (((uint64_t) v[7]) << 56);
 	}
 
-	// actual iteration
-	for (r = 0; r < 24; r++) {
+	for (r = 0; r < 24; r++) {				//	24 rounds
 
-		// Theta
-		for (i = 0; i < 5; i++)
+		for (i = 0; i < 5; i++) {			//	Theta
+
 			bc[i] = st[i] ^ st[i + 5] ^ st[i + 10] ^ st[i + 15] ^ st[i + 20];
+		}
 
 		for (i = 0; i < 5; i++) {
 			t = bc[(i + 4) % 5] ^ ROTL64(bc[(i + 1) % 5], 1);
@@ -61,8 +61,7 @@ void ref_keccakp(void *s)
 				st[j + i] ^= t;
 		}
 
-		// Rho Pi
-		t = st[1];
+		t = st[1];							//	Rho Pi
 		for (i = 0; i < 24; i++) {
 			j = keccakf_piln[i];
 			bc[0] = st[j];
@@ -70,24 +69,23 @@ void ref_keccakp(void *s)
 			t = bc[0];
 		}
 
-		//	Chi
-		for (j = 0; j < 25; j += 5) {
+		for (j = 0; j < 25; j += 5) {		//	Chi
 			for (i = 0; i < 5; i++)
 				bc[i] = st[j + i];
 			for (i = 0; i < 5; i++)
 				st[j + i] ^= (~bc[(i + 1) % 5]) & bc[(i + 2) % 5];
 		}
 
-		//	Iota
-		st[0] ^= keccakf_rndc[r];
+		st[0] ^= keccakf_rndc[r];			//	Iota
 	}
 
 	// endianess conversion. this is redundant on little-endian targets
+
 	for (i = 0; i < 25; i++) {
 		v = (uint8_t *) &st[i];
 		t = st[i];
 		v[0] = t & 0xFF;
-		v[1] = (t >> 8) & 0xFF;
+		v[1] = (t >>  8) & 0xFF;
 		v[2] = (t >> 16) & 0xFF;
 		v[3] = (t >> 24) & 0xFF;
 		v[4] = (t >> 32) & 0xFF;
@@ -97,15 +95,9 @@ void ref_keccakp(void *s)
 	}
 }
 
-void null_keccakp(void *s)
-{
-	fprintf(stderr, "[FAIL] *sha3_keccakp is not set.\n");
-	exit(-1);
-}
-
 //	pointer to the function
 
-void (*sha3_keccakp)(void *) = &null_keccakp;
+void (*sha3_keccakp)(void *) = &ref_keccakp;
 
 // Initialize the context for SHA3
 

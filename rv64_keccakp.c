@@ -2,6 +2,8 @@
 //	2020-03-05	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
+//	FIPS 202 Keccak permutation implementation for a 64-bit target.
+
 #include "insns.h"
 
 //	Keccak-p[1600,24](S)

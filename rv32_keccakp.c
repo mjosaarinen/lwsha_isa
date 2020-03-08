@@ -2,10 +2,9 @@
 //	2020-03-02	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-//	Bit-interleaved Keccak permutation
+//	Bit-interleaved FIPS 202 Keccak permutation for a 32-bit target.
 
 #include "insns.h"
-#include "sha3.h"
 
 //	interleave the state (for input)
 
@@ -39,7 +38,6 @@ void kp_untrlv50(uint32_t v[50])
 
 void rv32_keccakp(void *s)
 {
-
 	//	round constants (interleaved)
 
 	const uint32_t rc[48] = {
