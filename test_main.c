@@ -140,12 +140,16 @@ int test_shake()
 }
 
 
+int gek();
+
 //	stub main
 
 int main(int argc, char **argv)
 {
 	int i;
 	int fail = 0;
+
+	return gek();
 
 	for (i = 0; i < 2; i++) {
 
