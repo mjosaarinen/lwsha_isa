@@ -9,8 +9,9 @@
 
 #include "insns.h"
 
+//	4.1.2 SHA-224 and SHA-256 Functions
 
-//	upper case sigma is "sum" here
+//	upper case sigma is "sum" here; sum0, sum1
 
 uint32_t sum0(uint32_t rs1, uint32_t rs2)
 {
@@ -22,7 +23,7 @@ uint32_t sum1(uint32_t rs1, uint32_t rs2)
 	return rs1 + (rv_ror(rs2,  6) ^ rv_ror(rs2, 11) ^ rv_ror(rs2, 25));
 }
 
-//	lower case sigma
+//	lower case sigma0, sigma1
 
 uint32_t sig0(uint32_t rs1, uint32_t rs2)
 {

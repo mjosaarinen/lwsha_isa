@@ -141,6 +141,7 @@ int test_shake()
 
 
 int gek();
+int tek();
 
 //	stub main
 
@@ -149,7 +150,7 @@ int main(int argc, char **argv)
 	int i;
 	int fail = 0;
 
-	return gek();
+//	return tek();
 
 	for (i = 0; i < 2; i++) {
 
@@ -169,6 +170,7 @@ int main(int argc, char **argv)
 		fail += test_sha3();
 		fail += test_shake();
 	}
+
 
 	if (fail == 0) {
 		printf("[PASS] all tests passed.\n");

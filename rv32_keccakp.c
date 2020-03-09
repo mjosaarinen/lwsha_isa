@@ -13,10 +13,11 @@ void kp_intrlv50(uint32_t v[50])
 	uint32_t t0, t1, *p;
 
 	for (p = v; p != &v[50]; p += 2) {
-		t0		=	p[0];
-		t1		=	p[1];
-		p[0]	=	intrlv0(t0, t1);
-		p[1]	=	intrlv1(t0, t1);
+		//	uses bitmanip UNSHFL with immediate 15, which is pseudo-op "unzip"
+		t0 	 = rv_unshfl(p[0], 15);
+		t1	 = rv_unshfl(p[1], 15);
+		p[0] = (t0 & 0x0000FFFF) | (t1 << 16);
+		p[1] = (t1 & 0xFFFF0000) | (t0 >> 16);
 	}
 }
 
@@ -27,10 +28,11 @@ void kp_untrlv50(uint32_t v[50])
 	uint32_t t0, t1, *p;
 
 	for (p = v; p != &v[50]; p += 2) {
-		t0		=	p[0];
-		t1		=	p[1];
-		p[0]	=	untrlvl(t0, t1);
-		p[1]	=	untrlvh(t0, t1);
+		//	uses bitmanip SHFL with immediate 15, which is pseudo-op "zip"
+		t0 	 = rv_shfl(p[0], 15);
+		t1	 = rv_shfl(p[1], 15);
+		p[0] = ((t1 & 0x55555555) << 1) | (t0 & 0x55555555);
+		p[1] = ((t0 & 0xAAAAAAAA) >> 1) | (t1 & 0xAAAAAAAA);
 	}
 }
 
