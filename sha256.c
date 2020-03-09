@@ -12,39 +12,47 @@
 
 //	upper case sigma is "sum" here
 
-uint32_t sum0(uint32_t x)
+uint32_t sum0(uint32_t rs1, uint32_t rs2)
 {
-	return rv_ror(x,  2) ^ rv_ror(x, 13) ^ rv_ror(x, 22);
+	return rs1 + (rv_ror(rs2,  2) ^ rv_ror(rs2, 13) ^ rv_ror(rs2, 22));
 }
 
-uint32_t sum1(uint32_t x)
+uint32_t sum1(uint32_t rs1, uint32_t rs2)
 {
-	return rv_ror(x,  6) ^ rv_ror(x, 11) ^ rv_ror(x, 25);
+	return rs1 + (rv_ror(rs2,  6) ^ rv_ror(rs2, 11) ^ rv_ror(rs2, 25));
 }
 
 //	lower case sigma
 
-uint32_t sig0(uint32_t x)
+uint32_t sig0(uint32_t rs1, uint32_t rs2)
 {
-	return rv_ror(x,  7) ^ rv_ror(x, 18) ^ (x >>  3);
+	return rs1 + (rv_ror(rs2,  7) ^ rv_ror(rs2, 18) ^ (rs2 >>  3));
 }
 
-uint32_t sig1(uint32_t x)
+uint32_t sig1(uint32_t rs1, uint32_t rs2)
 {
-	return rv_ror(x, 17) ^ rv_ror(x, 19) ^ (x >> 10);
+	return rs1 + (rv_ror(rs2, 17) ^ rv_ror(rs2, 19) ^ (rs2 >> 10));
 }
 
 //	nonlinear functions
 
 uint32_t ch(uint32_t x, uint32_t y, uint32_t z)
 {
-	return (x & y) ^ (~x & z);
+	return (x & y) ^ rv_andn(z, x);
 }
 
 uint32_t maj(uint32_t x, uint32_t y, uint32_t z)
 {
 	return (x & y) ^ (x & z) ^ (y & z);
 }
+
+#define SHA256R(a, b, c, d, e, f, g, h, mi, ki) {		\
+	h = sum1(h, e) + mi + ch(e, f, g) + ki;				\
+	d = d + h;											\
+	h = sum0(h, a) + maj(a, b, c);						}
+
+#define SHA256K(x0, x1, x9, xe)		\
+	x0 = sig0(x0, x1) + sig1(x9, xe);
 
 //	compression function
 
@@ -53,7 +61,7 @@ void sha256_compress(uint32_t s[8], const uint32_t m[16])
 	//	SHA-256 Constants, Sect 4.2.2. gp-pari:
 	//	for(i=1,64,printf("0x%08X, ", floor(2^32 * frac(prime(i)^(1/3)))))
 
-	static const uint32_t ck[64] = {
+	const uint32_t ck[64] = {
 		0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
 		0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
 		0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3,
@@ -72,53 +80,67 @@ void sha256_compress(uint32_t s[8], const uint32_t m[16])
 		0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
 	};
 
-	uint32_t a, b, c, d, e, f, g, h;
-	uint32_t t1, t2;
-	uint32_t w[64];
-	int i;
+	uint32_t	a, b, c, d, e, f, g, h;
+	uint32_t	m0, m1, m2, m3, m4, m5, m6, m7,
+				m8, m9, ma, mb, mc, md, me, mf;
 
-	for (i = 0; i < 16; i++) {
-		w[i] = m[i];
-	}
-	for (i = 16; i < 64; i++) {
-		w[i] = sig1(w[i - 2]) + w[i - 7] + sig0(w[i - 15]) + w[i - 16];
-	}
+	const uint32_t *k;
 
-	a = s[0];
-	b = s[1];
-	c = s[2];
-	d = s[3];
-	e = s[4];
-	f = s[5];
-	g = s[6];
-	h = s[7];
+	a = s[0];	b = s[1];	c = s[2];	d = s[3];
+	e = s[4];	f = s[5];	g = s[6];	h = s[7];
 
-	for (i = 0; i < 64; i++) {
+	m0 = m[ 0]; m1 = m[ 1]; m2 = m[ 2]; m3 = m[ 3];
+	m4 = m[ 4]; m5 = m[ 5]; m6 = m[ 6]; m7 = m[ 7];
+	m8 = m[ 8]; m9 = m[ 9]; ma = m[10]; mb = m[11];
+	mc = m[12]; md = m[13]; me = m[14]; mf = m[15];
 
-		t1 = h + sum1(e) + ch(e, f, g) + ck[i] + w[i];
-		t2 = sum0(a) + maj(a, b, c);
 
-		h = g;
-		g = f;
-		f = e;
-		e = d + t1;
-		d = c;
-		c = b;
-		b = a;
-		a = t1 + t2;
+	k = ck;
 
-		printf("[t=%2d] %08X %08X %08X %08X %08X %08X %08X %08X\n",
-			i,	a, b, c, d, e, f, g, h);
-	}
+	goto noexp;
 
-	s[0] += a;
-	s[1] += b;
-	s[2] += c;
-	s[3] += d;
-	s[4] += e;
-	s[5] += f;
-	s[6] += g;
-	s[7] += h;
+	do {
+
+		SHA256K(m0, m1, m9, me);	SHA256K(m1, m2, ma, mf);
+		SHA256K(m2, m3, mb, m0);	SHA256K(m3, m4, mc, m1);
+		SHA256K(m4, m5, md, m2);	SHA256K(m5, m6, me, m3);
+		SHA256K(m6, m7, mf, m4);	SHA256K(m7, m8, m0, m5);
+		SHA256K(m8, m9, m1, m6);	SHA256K(m9, ma, m2, m7);
+		SHA256K(ma, mb, m3, m8);	SHA256K(mb, mc, m4, m9);
+		SHA256K(mc, md, m5, ma);	SHA256K(md, me, m6, mb);
+		SHA256K(me, mf, m7, mc);	SHA256K(mf, m0, m8, md);
+
+	noexp:
+
+		SHA256R( a, b, c, d, e, f, g, h, m0, k[ 0] );
+		SHA256R( h, a, b, c, d, e, f, g, m1, k[ 1] );
+		SHA256R( g, h, a, b, c, d, e, f, m2, k[ 2] );
+		SHA256R( f, g, h, a, b, c, d, e, m3, k[ 3] );
+		SHA256R( e, f, g, h, a, b, c, d, m4, k[ 4] );
+		SHA256R( d, e, f, g, h, a, b, c, m5, k[ 5] );
+		SHA256R( c, d, e, f, g, h, a, b, m6, k[ 6] );
+		SHA256R( b, c, d, e, f, g, h, a, m7, k[ 7] );
+		SHA256R( a, b, c, d, e, f, g, h, m8, k[ 8] );
+		SHA256R( h, a, b, c, d, e, f, g, m9, k[ 9] );
+		SHA256R( g, h, a, b, c, d, e, f, ma, k[10] );
+		SHA256R( f, g, h, a, b, c, d, e, mb, k[11] );
+		SHA256R( e, f, g, h, a, b, c, d, mc, k[12] );
+		SHA256R( d, e, f, g, h, a, b, c, md, k[13] );
+		SHA256R( c, d, e, f, g, h, a, b, me, k[14] );
+		SHA256R( b, c, d, e, f, g, h, a, mf, k[15] );
+
+		k += 16;
+
+	} while (k != &ck[64]);
+
+	s[0] = s[0] + a;
+	s[1] = s[1] + b;
+	s[2] = s[2] + c;
+	s[3] = s[3] + d;
+	s[4] = s[4] + e;
+	s[5] = s[5] + f;
+	s[6] = s[6] + g;
+	s[7] = s[7] + h;
 }
 
 
@@ -144,7 +166,7 @@ int gek()
 
 	memset(m, 0, sizeof(m));
 	memcpy(s, h0, sizeof(s));
-	m[ 0] = 0x61626380;	
+	m[ 0] = 0x61626380;
 	m[15] = 0x00000018;
 
 	sha256_compress(s, m);
@@ -152,7 +174,7 @@ int gek()
 	printf("[TEST]");
 	for (i = 0; i < 8; i++)
 		printf(" %08X", s[i]);
-	
+
 	if (memcmp(s, abc, sizeof(abc)) == 0) {
 		printf("\n[PASS] it's okay!\n");
 	} else {
