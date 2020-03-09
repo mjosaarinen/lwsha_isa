@@ -1,8 +1,8 @@
-//  insns.c
-//  2020-03-07  Markku-Juhani O. Saarinen <mjos@pqshield.com>
-//  Copyright (c) 2020, PQShield Ltd. All rights reserved.
+//	insns.c
+//	2020-03-07	Markku-Juhani O. Saarinen <mjos@pqshield.com>
+//	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-//  instruction emulation code -- these are all from bitmanip
+//	instruction emulation code -- these are all from bitmanip
 
 #include "insns.h"
 
@@ -29,7 +29,7 @@ uint64_t rv_andn(uint64_t rs1, uint64_t rs2)
 	return rs1 & ~rs2;
 }
 
-//  generalized reverse GREV / GREVI
+//	generalized reverse GREV / GREVI
 
 uint32_t rv_grev(uint32_t rs1, uint32_t rs2)
 {
@@ -48,7 +48,7 @@ uint32_t rv_grev(uint32_t rs1, uint32_t rs2)
 	return x;
 }
 
-//  generalized reverse GREVW / GREVIW
+//	generalized reverse GREVW / GREVIW
 
 uint64_t rv_grevw(uint64_t rs1, uint64_t rs2)
 {
@@ -85,7 +85,7 @@ static inline uint32_t shuffle32_stage(uint32_t src, uint32_t ml,
 	return x;
 }
 
-//  generalized shuffle SHFL / SHFLI
+//	generalized shuffle SHFL / SHFLI
 
 uint32_t rv_shfl(uint32_t rs1, uint32_t rs2)
 {
@@ -134,7 +134,7 @@ static inline uint64_t shuffle64_stage(uint64_t src, uint64_t ml,
 	return x;
 }
 
-//  generalized shuffle SHFLW 
+//	generalized shuffle SHFLW
 
 uint64_t rv_shflw(uint64_t rs1, uint64_t rs2)
 {

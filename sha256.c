@@ -3,8 +3,6 @@
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
 //	FIPS 180-4 SHA2-224/256
-
-#include <stdio.h>
 #include <string.h>
 
 //	bitmanip (emulation) prototypes here
@@ -12,26 +10,26 @@
 
 //	4.1.2 SHA-224 and SHA-256 Functions
 
-//	upper case sigma0, sigma1 is "sum" here; sum0, sum1
+//	upper case sigma0, sigma1 is "sum" here; sha256_sum0, sha256_sum1
 
-uint32_t sum0(uint32_t rs1, uint32_t rs2)
+uint32_t sha256_sum0(uint32_t rs1, uint32_t rs2)
 {
 	return rs1 + (rv_ror(rs2,  2) ^ rv_ror(rs2, 13) ^ rv_ror(rs2, 22));
 }
 
-uint32_t sum1(uint32_t rs1, uint32_t rs2)
+uint32_t sha256_sum1(uint32_t rs1, uint32_t rs2)
 {
 	return rs1 + (rv_ror(rs2,  6) ^ rv_ror(rs2, 11) ^ rv_ror(rs2, 25));
 }
 
 //	lower case sigma0, sigma1
 
-uint32_t sig0(uint32_t rs1, uint32_t rs2)
+uint32_t sha256_sig0(uint32_t rs1, uint32_t rs2)
 {
 	return rs1 + (rv_ror(rs2,  7) ^ rv_ror(rs2, 18) ^ (rs2 >>  3));
 }
 
-uint32_t sig1(uint32_t rs1, uint32_t rs2)
+uint32_t sha256_sig1(uint32_t rs1, uint32_t rs2)
 {
 	return rs1 + (rv_ror(rs2, 17) ^ rv_ror(rs2, 19) ^ (rs2 >> 10));
 }
@@ -49,16 +47,16 @@ uint32_t maj(uint32_t x, uint32_t y, uint32_t z)
 }
 
 #define SHA256R(a, b, c, d, e, f, g, h, mi, ki) {		\
-	h = sum1(h, e) + mi + ch(e, f, g) + ki;				\
+	h = sha256_sum1(h, e) + mi + ch(e, f, g) + ki;				\
 	d = d + h;											\
-	h = sum0(h, a) + maj(a, b, c);						}
+	h = sha256_sum0(h, a) + maj(a, b, c);						}
 
 #define SHA256K(x0, x1, x9, xe)		\
-	x0 = sig0(x0, x1) + sig1(x9, xe);
+	x0 = sha256_sig0(x0, x1) + sha256_sig1(x9, xe);
 
 //	compression function
 
-void sha256_compress(uint32_t s[8], const uint32_t m[16])
+void sha256_compress(uint32_t s[8],	 uint32_t m[16])
 {
 	//	SHA-256 Constants, Sect 4.2.2. gp-pari:
 	//	for(i=1,64,printf("0x%08X, ", floor(2^32 * frac(prime(i)^(1/3)))))
@@ -91,10 +89,17 @@ void sha256_compress(uint32_t s[8], const uint32_t m[16])
 	a = s[0];	b = s[1];	c = s[2];	d = s[3];
 	e = s[4];	f = s[5];	g = s[6];	h = s[7];
 
-	m0 = m[ 0]; m1 = m[ 1]; m2 = m[ 2]; m3 = m[ 3];
-	m4 = m[ 4]; m5 = m[ 5]; m6 = m[ 6]; m7 = m[ 7];
-	m8 = m[ 8]; m9 = m[ 9]; ma = m[10]; mb = m[11];
-	mc = m[12]; md = m[13]; me = m[14]; mf = m[15];
+
+	//	load with rev8.w
+
+	m0 = rv_grev(m[ 0], 0x18);	m1 = rv_grev(m[ 1], 0x18);
+	m2 = rv_grev(m[ 2], 0x18);	m3 = rv_grev(m[ 3], 0x18);
+	m4 = rv_grev(m[ 4], 0x18);	m5 = rv_grev(m[ 5], 0x18);
+	m6 = rv_grev(m[ 6], 0x18);	m7 = rv_grev(m[ 7], 0x18);
+	m8 = rv_grev(m[ 8], 0x18);	m9 = rv_grev(m[ 9], 0x18);
+	ma = rv_grev(m[10], 0x18);	mb = rv_grev(m[11], 0x18);
+	mc = rv_grev(m[12], 0x18);	md = rv_grev(m[13], 0x18);
+	me = rv_grev(m[14], 0x18);	mf = rv_grev(m[15], 0x18);
 
 	k = ck;
 
@@ -134,55 +139,60 @@ void sha256_compress(uint32_t s[8], const uint32_t m[16])
 
 	} while (k != &ck[64]);
 
-	s[0] = s[0] + a;
-	s[1] = s[1] + b;
-	s[2] = s[2] + c;
-	s[3] = s[3] + d;
-	s[4] = s[4] + e;
-	s[5] = s[5] + f;
-	s[6] = s[6] + g;
-	s[7] = s[7] + h;
+	s[0] = s[0] + a;	s[1] = s[1] + b;
+	s[2] = s[2] + c;	s[3] = s[3] + d;
+	s[4] = s[4] + e;	s[5] = s[5] + f;
+	s[6] = s[6] + g;	s[7] = s[7] + h;
 }
 
+//	Compute 32-byte message digest to "md" from "in" which has "inlen" bytes
 
-
-
-//	SHA-256 initial value, Sect 5.3.3.
-//	for(i=1,8,printf("0x%08X, ", floor(2^32 * frac(prime(i)^(1/2)))))
-
-static const uint32_t h0[8] = {
-	0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
-	0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19
-};
-
-int gek()
+void sha256(void *md, const void *in, size_t inlen)
 {
+	size_t i;
 	uint32_t s[8];
-	uint32_t m[16];
-	int i;
+	uint64_t x;
+	const uint8_t *p = in;
 
-	uint32_t abc[8] = {
-		0xBA7816BF, 0x8F01CFEA, 0x414140DE, 0x5DAE2223,
-		0xB00361A3, 0x96177A9C, 0xB410FF61, 0xF20015AD
-	};
+	union {									//	aligned:
+		uint8_t b[64];						//	8-bit bytes
+		uint32_t w[16];						//	32-bit words
+	} m;
 
-	memset(m, 0, sizeof(m));
-	memcpy(s, h0, sizeof(s));
-	m[ 0] = 0x61626380;
-	m[15] = 0x00000018;
+	//	SHA-256 initial value, Sect 5.3.3.
+	//	for(i=1,8,printf("0x%08X, ", floor(2^32 * frac(prime(i)^(1/2)))))
+	s[0] = 0x6A09E667;	s[1] = 0xBB67AE85;
+	s[2] = 0x3C6EF372;	s[3] = 0xA54FF53A,
+	s[4] = 0x510E527F;	s[5] = 0x9B05688C;
+	s[6] = 0x1F83D9AB;	s[7] = 0x5BE0CD19;
 
-	sha256_compress(s, m);
+	//	"md padding"
+	x = inlen << 3;							//	length in bits
 
-	printf("[TEST]");
-	for (i = 0; i < 8; i++)
-		printf(" %08X", s[i]);
-
-	if (memcmp(s, abc, sizeof(abc)) == 0) {
-		printf("\n[PASS] it's okay!\n");
-	} else {
-		printf("\n[FAIL] oh no\n");
+	while (inlen >= 64) {					//	full blocks
+		memcpy(m.b, p, 64);
+		sha256_compress(s, m.w);
+		inlen -= 64;
+		p += 64;
 	}
+	memcpy(m.b, p, inlen);					//	last data block
+	m.b[inlen++] = 0x80;
+	if (inlen > 56) {
+		memset(&m.b[inlen], 0x00, 64 - inlen);
+		sha256_compress(s, m.w);
+		inlen = 0;
+	}
+	i = 64;									//	process length
+	while (x > 0) {
+		m.b[--i] = x & 0xFF;
+		x >>= 8;
+	}
+	memset(&m.b[inlen], 0x00, i - inlen);
+	sha256_compress(s, m.w);
 
-	return 0;
+	for (i = 0; i < 8; i++)					//	convert output to big endian
+		s[i] = rv_grev(s[i], 0x18);			//	rev8.w
+
+	memcpy(md, s, sizeof(s));
 }
 

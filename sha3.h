@@ -15,7 +15,7 @@
 typedef struct {
 	union {									//	aligned:
 		uint8_t b[200];						//	8-bit bytes
-		uint64_t q[25];						//	64-bit words
+		uint64_t d[25];						//	64-bit words
 	} st;
 	int pt, rsiz, mdlen;					//	(don't overflow)
 } sha3_ctx_t;
@@ -23,8 +23,10 @@ typedef struct {
 //	function pointer to the permutation
 extern void (*sha3_keccakp)(void *);
 
-//	which can be set to point to an external function. default is
+//	which can be set to point to an external function
 void ref_keccakp(void *);					//	sha3.c ("reference")
+void rv32_keccakp(void *);					//	rv32_keccakp.c
+void rv64_keccakp(void *);					//	rv64_keccakp.c
 
 //	compute a SHA-3 hash "md" of "mdlen" bytes from data in "in"
 void *sha3(void *md, int mdlen, const void *in, size_t inlen);
