@@ -7,11 +7,12 @@
 #include <stdio.h>
 #include <string.h>
 
+//	bitmanip (emulation) prototypes here
 #include "insns.h"
 
 //	4.1.2 SHA-224 and SHA-256 Functions
 
-//	upper case sigma is "sum" here; sum0, sum1
+//	upper case sigma0, sigma1 is "sum" here; sum0, sum1
 
 uint32_t sum0(uint32_t rs1, uint32_t rs2)
 {
@@ -95,7 +96,6 @@ void sha256_compress(uint32_t s[8], const uint32_t m[16])
 	m8 = m[ 8]; m9 = m[ 9]; ma = m[10]; mb = m[11];
 	mc = m[12]; md = m[13]; me = m[14]; mf = m[15];
 
-
 	k = ck;
 
 	goto noexp;
@@ -143,6 +143,7 @@ void sha256_compress(uint32_t s[8], const uint32_t m[16])
 	s[6] = s[6] + g;
 	s[7] = s[7] + h;
 }
+
 
 
 

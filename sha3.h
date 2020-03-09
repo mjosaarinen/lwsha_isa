@@ -2,7 +2,7 @@
 //	2020-03-02	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-//	FIPS 202: SHA-3 and SHAKE Extensible Output Functions
+//	FIPS 202: SHA-3 hash and SHAKE eXtensible Output Functions (XOF)
 
 #ifndef _SHA3_H_
 #define _SHA3_H_
@@ -17,7 +17,7 @@ typedef struct {
 		uint8_t b[200];						//	8-bit bytes
 		uint64_t q[25];						//	64-bit words
 	} st;
-	int pt, rsiz, mdlen;					//	(don't overflow these!)
+	int pt, rsiz, mdlen;					//	(don't overflow)
 } sha3_ctx_t;
 
 //	function pointer to the permutation
@@ -39,7 +39,10 @@ int sha3_final(void *md, sha3_ctx_t *c);	//	digest goes to md
 #define shake256_init(c) sha3_init(c, 32)
 #define shake_update sha3_update
 
+//	add padding (call once after calls to shake_update() are done
 void shake_xof(sha3_ctx_t *c);
+
+//	squeeze output
 void shake_out(sha3_ctx_t *c, void *out, size_t len);
 
 #endif

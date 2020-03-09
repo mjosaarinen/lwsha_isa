@@ -44,19 +44,5 @@ uint64_t rv_shflw(uint64_t rs1, uint64_t rs2);
 //	generalized unshuffle UNSHFLW
 uint64_t rv_unshflw(uint64_t rs1, uint64_t rs2);
 
-//	XXX
-
-//	interleave even
-uint32_t intrlv0(uint32_t xl, uint32_t xh);
-
-//	interleave odd
-uint32_t intrlv1(uint32_t xl, uint32_t xh);
-
-//	un-interlave low
-uint32_t untrlvl(uint32_t x0, uint32_t x1);
-
-//	un-interlave high
-uint32_t untrlvh(uint32_t x0, uint32_t x1);
-
 #endif
 

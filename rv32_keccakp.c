@@ -62,6 +62,7 @@ void rv32_keccakp(void *s)
 	uint32_t	*v = (uint32_t *) s;
 
 	//	interleave the state (this can be outside the function)
+
 	kp_intrlv50(v);
 
 	//	(passed between rounds, initial load)
@@ -74,6 +75,7 @@ void rv32_keccakp(void *s)
 	for (q = rc; q != &rc[48]; q += 2) {
 
 		//	Theta
+
 		for (p = v; p != &v[40]; p += 10) {
 			u0 = u0 ^ p[0];			u1 = u1 ^ p[1];
 			t2 = t2 ^ p[2];			t3 = t3 ^ p[3];

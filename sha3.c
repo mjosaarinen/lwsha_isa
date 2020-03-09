@@ -2,11 +2,15 @@
 //	2020-03-02	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-#include <stdio.h>
-#include <stdlib.h>
+//	FIPS 202: SHA-3 hash and SHAKE eXtensible Output Functions (XOF)
+
 #include "sha3.h"
 
-//	Simple and slow "reference" permutation.
+//	These functions have not been optimized for performance -- they are
+//	here just to facilitate testing of the external permutation
+//	implementations rv32_keccakp() and rv64_keccakp().
+
+//	Simple and slow "reference" permutation. THIS IS NOT THE RISC-V CODE !
 
 #ifndef ROTL64
 #define ROTL64(x, y) (((x) << (y)) | ((x) >> (64 - (y))))
@@ -16,14 +20,14 @@ void ref_keccakp(void *s)
 {
 	// constants
 	const uint64_t keccakf_rndc[24] = {
-		0x0000000000000001, 0x0000000000008082, 0x800000000000808A,
-		0x8000000080008000, 0x000000000000808B, 0x0000000080000001,
-		0x8000000080008081, 0x8000000000008009, 0x000000000000008A,
-		0x0000000000000088, 0x0000000080008009, 0x000000008000000A,
-		0x000000008000808B, 0x800000000000008B, 0x8000000000008089,
-		0x8000000000008003, 0x8000000000008002, 0x8000000000000080,
-		0x000000000000800A, 0x800000008000000A, 0x8000000080008081,
-		0x8000000000008080, 0x0000000080000001, 0x8000000080008008
+		0x0000000000000001LL, 0x0000000000008082LL, 0x800000000000808ALL,
+		0x8000000080008000LL, 0x000000000000808BLL, 0x0000000080000001LL,
+		0x8000000080008081LL, 0x8000000000008009LL, 0x000000000000008ALL,
+		0x0000000000000088LL, 0x0000000080008009LL, 0x000000008000000ALL,
+		0x000000008000808BLL, 0x800000000000008BLL, 0x8000000000008089LL,
+		0x8000000000008003LL, 0x8000000000008002LL, 0x8000000000000080LL,
+		0x000000000000800ALL, 0x800000008000000ALL, 0x8000000080008081LL,
+		0x8000000000008080LL, 0x0000000080000001LL, 0x8000000080008008LL
 	};
 	const int keccakf_rotc[24] = {
 		1,	3,	6,	10, 15, 21, 28, 36, 45, 55, 2,	14,
@@ -35,11 +39,12 @@ void ref_keccakp(void *s)
 	};
 
 	int i, j, r;
-	uint64_t t, bc[5];
+	uint64_t t, u, bc[5];
 	uint8_t *v;
 	uint64_t *st = s;
 
 	// endianess conversion. this is redundant on little-endian targets
+
 	for (i = 0; i < 25; i++) {
 		v = (uint8_t *) &st[i];
 		st[i] = ((uint64_t) v[0])	  | (((uint64_t) v[1]) << 8) |
@@ -51,7 +56,6 @@ void ref_keccakp(void *s)
 	for (r = 0; r < 24; r++) {				//	24 rounds
 
 		for (i = 0; i < 5; i++) {			//	Theta
-
 			bc[i] = st[i] ^ st[i + 5] ^ st[i + 10] ^ st[i + 15] ^ st[i + 20];
 		}
 
@@ -64,9 +68,9 @@ void ref_keccakp(void *s)
 		t = st[1];							//	Rho Pi
 		for (i = 0; i < 24; i++) {
 			j = keccakf_piln[i];
-			bc[0] = st[j];
+			u = st[j];
 			st[j] = ROTL64(t, keccakf_rotc[i]);
-			t = bc[0];
+			t = u;
 		}
 
 		for (j = 0; j < 25; j += 5) {		//	Chi
@@ -99,7 +103,7 @@ void ref_keccakp(void *s)
 
 void (*sha3_keccakp)(void *) = &ref_keccakp;
 
-// Initialize the context for SHA3
+//	initialize the context for SHA3
 
 int sha3_init(sha3_ctx_t *c, int mdlen)
 {
@@ -114,7 +118,7 @@ int sha3_init(sha3_ctx_t *c, int mdlen)
 	return 1;
 }
 
-// update state with more data
+//	update state with more data
 
 int sha3_update(sha3_ctx_t *c, const void *data, size_t len)
 {
@@ -134,7 +138,7 @@ int sha3_update(sha3_ctx_t *c, const void *data, size_t len)
 	return 1;
 }
 
-// finalize and output a hash
+//	finalize and output a hash
 
 int sha3_final(void *md, sha3_ctx_t *c)
 {
@@ -164,7 +168,9 @@ void *sha3(void *md, int mdlen, const void *in, size_t inlen)
 	return md;
 }
 
-// SHAKE128 and SHAKE256 extensible-output functionality
+//	SHAKE128 and SHAKE256 extensible-output functionality
+
+//	add padding (call once after calls to shake_update() are done
 
 void shake_xof(sha3_ctx_t *c)
 {
@@ -173,6 +179,8 @@ void shake_xof(sha3_ctx_t *c)
 	sha3_keccakp(c->st.q);
 	c->pt = 0;
 }
+
+//	squeeze output
 
 void shake_out(sha3_ctx_t *c, void *out, size_t len)
 {
