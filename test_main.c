@@ -10,9 +10,13 @@ int test_sha3s();			//	test_sha3.c
 
 //	stub main
 
+int tek();
+
 int main(int argc, char **argv)
 {
 	int fail = 0;
+
+	return tek();
 
 	fail += test_sha2s();
 	fail += test_sha3s();
