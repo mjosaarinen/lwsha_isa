@@ -1,15 +1,15 @@
-//	sha256.c
+//	rv32_sha256.c
 //	2020-03-08	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-//	FIPS 180-4 SHA2-224/256
-#include <string.h>
+//	FIPS 180-4 SHA2-224/256 compression function for RV32
+
+#include "sha2.h"
 
 //	bitmanip (emulation) prototypes here
 #include "insns.h"
 
 //	4.1.2 SHA-224 and SHA-256 Functions
-
 //	upper case sigma0, sigma1 is "sum" here; sha256_sum0, sha256_sum1
 
 uint32_t sha256_sum0(uint32_t rs1, uint32_t rs2)
@@ -54,12 +54,11 @@ uint32_t maj(uint32_t x, uint32_t y, uint32_t z)
 #define SHA256K(x0, x1, x9, xe)		\
 	x0 = sha256_sig0(x0, x1) + sha256_sig1(x9, xe);
 
-//	compression function
+//	compression function (this one does *not* modify m[16])
 
-void sha256_compress(uint32_t s[8],	 uint32_t m[16])
+void rv32_sha256_compress(uint32_t *s, uint32_t *m)
 {
-	//	SHA-256 Constants, Sect 4.2.2. gp-pari:
-	//	for(i=1,64,printf("0x%08X, ", floor(2^32 * frac(prime(i)^(1/3)))))
+	//	SHA-256 Round Constants, Sect 4.2.2.
 
 	const uint32_t ck[64] = {
 		0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -88,7 +87,6 @@ void sha256_compress(uint32_t s[8],	 uint32_t m[16])
 
 	a = s[0];	b = s[1];	c = s[2];	d = s[3];
 	e = s[4];	f = s[5];	g = s[6];	h = s[7];
-
 
 	//	load with rev8.w
 
@@ -145,54 +143,4 @@ void sha256_compress(uint32_t s[8],	 uint32_t m[16])
 	s[6] = s[6] + g;	s[7] = s[7] + h;
 }
 
-//	Compute 32-byte message digest to "md" from "in" which has "inlen" bytes
-
-void sha256(void *md, const void *in, size_t inlen)
-{
-	size_t i;
-	uint32_t s[8];
-	uint64_t x;
-	const uint8_t *p = in;
-
-	union {									//	aligned:
-		uint8_t b[64];						//	8-bit bytes
-		uint32_t w[16];						//	32-bit words
-	} m;
-
-	//	SHA-256 initial value, Sect 5.3.3.
-	//	for(i=1,8,printf("0x%08X, ", floor(2^32 * frac(prime(i)^(1/2)))))
-	s[0] = 0x6A09E667;	s[1] = 0xBB67AE85;
-	s[2] = 0x3C6EF372;	s[3] = 0xA54FF53A,
-	s[4] = 0x510E527F;	s[5] = 0x9B05688C;
-	s[6] = 0x1F83D9AB;	s[7] = 0x5BE0CD19;
-
-	//	"md padding"
-	x = inlen << 3;							//	length in bits
-
-	while (inlen >= 64) {					//	full blocks
-		memcpy(m.b, p, 64);
-		sha256_compress(s, m.w);
-		inlen -= 64;
-		p += 64;
-	}
-	memcpy(m.b, p, inlen);					//	last data block
-	m.b[inlen++] = 0x80;
-	if (inlen > 56) {
-		memset(&m.b[inlen], 0x00, 64 - inlen);
-		sha256_compress(s, m.w);
-		inlen = 0;
-	}
-	i = 64;									//	process length
-	while (x > 0) {
-		m.b[--i] = x & 0xFF;
-		x >>= 8;
-	}
-	memset(&m.b[inlen], 0x00, i - inlen);
-	sha256_compress(s, m.w);
-
-	for (i = 0; i < 8; i++)					//	convert output to big endian
-		s[i] = rv_grev(s[i], 0x18);			//	rev8.w
-
-	memcpy(md, s, sizeof(s));
-}
 

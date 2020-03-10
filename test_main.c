@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 	fail += test_sha256();
 	fail += test_sha3s();
 
-	printf("[%s] === finished with %d unit test failures ===\n", 
+	printf("[%s] === finished with %d unit test failures ===\n",
 		fail == 0 ? "PASS" : "FAIL", fail);
 
 	return 0;
