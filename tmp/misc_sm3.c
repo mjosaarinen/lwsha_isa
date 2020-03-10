@@ -1,4 +1,4 @@
-//	rv32_sm3.c
+//	misc_sm3.c
 //	2020-03-10	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
@@ -47,10 +47,9 @@ void rv32_sm3_compress(uint32_t *s, uint32_t *m)
 	//	linear schedule
 
 	for (i = 16; i < 68; i++) {
-		w[i] = sm3_p1(	w[i - 16] ^ w[i - 9] ^ 
-						rv_ror(w[i - 3], 17), 
-							w[i - 13])
-				^ w[i - 6];
+		w[i] = sm3_p1(w[i - 16] ^ 
+					w[i - 9] ^ 	rv_ror(w[i - 3], 17), 
+						w[i - 13]) ^ w[i - 6];
 	}
 
 	for (i = 0; i < 64; i++) {
