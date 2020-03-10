@@ -15,11 +15,11 @@
 
 //	pointer to the function
 
-void (*sha3_keccakp)(void *) = rv32_keccakp;
+void (*sha3_keccakp)(void *) = rv64_keccakp;
 
 //	initialize the context for SHA3
 
-int sha3_init(sha3_ctx_t *c, int mdlen)
+void sha3_init(sha3_ctx_t *c, int mdlen)
 {
 	int i;
 
@@ -28,13 +28,11 @@ int sha3_init(sha3_ctx_t *c, int mdlen)
 	c->mdlen = mdlen;
 	c->rsiz = 200 - 2 * mdlen;
 	c->pt = 0;
-
-	return 1;
 }
 
 //	update state with more data
 
-int sha3_update(sha3_ctx_t *c, const void *data, size_t len)
+void sha3_update(sha3_ctx_t *c, const void *data, size_t len)
 {
 	size_t i;
 	int j;
@@ -48,13 +46,11 @@ int sha3_update(sha3_ctx_t *c, const void *data, size_t len)
 		}
 	}
 	c->pt = j;
-
-	return 1;
 }
 
 //	finalize and output a hash
 
-int sha3_final(uint8_t *md, sha3_ctx_t *c)
+void sha3_final(uint8_t *md, sha3_ctx_t *c)
 {
 	int i;
 
@@ -65,8 +61,6 @@ int sha3_final(uint8_t *md, sha3_ctx_t *c)
 	for (i = 0; i < c->mdlen; i++) {
 		((uint8_t *) md)[i] = c->st.b[i];
 	}
-
-	return 1;
 }
 
 //	compute a SHA-3 hash "md" of "mdlen" bytes from data in "in"

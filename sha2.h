@@ -10,16 +10,27 @@
 #include <stddef.h>
 #include <stdint.h>
 
-//	SHA-224: Compute 28-byte hash to "md" from "in" which has "inlen" bytes.
+//	SHA2-224: Compute 28-byte hash to "md" from "in" which has "inlen" bytes.
 void sha2_224(uint8_t *md, const void *in, size_t inlen);
 
-//	SHA-256: Compute 32-byte hash to "md" from "in" which has "inlen" bytes.
+//	SHA2-256: Compute 32-byte hash to "md" from "in" which has "inlen" bytes.
 void sha2_256(uint8_t *md, const void *in, size_t inlen);
+
+//	SHA2-384: Compute 48-byte hash to "md" from "in" which has "inlen" bytes.
+void sha2_384(uint8_t *md, const void *in, size_t inlen);
+
+//	SHA2-512: Compute 64-byte hash to "md" from "in" which has "inlen" bytes.
+void sha2_512(uint8_t *md, const void *in, size_t inlen);
+
 
 //	function pointer to the compression function
 extern void (*sha256_compress)(uint32_t *, uint32_t *);
+extern void (*sha512_compress)(uint64_t *, uint64_t *);
 
-//	compression function implementation (rv32_sha256.c)
+//	SHA-256 compress for RV32 (rv32_sha256.c)
 void rv32_sha256_compress(uint32_t *s, uint32_t *m);
+
+//	SHA-512 compress for RV64 (rv64_sha512.c)
+void rv64_sha512_compress(uint64_t *s, uint64_t *m);
 
 #endif

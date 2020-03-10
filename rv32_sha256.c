@@ -10,7 +10,9 @@
 #include "bitmanip.h"
 
 //	4.1.2 SHA-224 and SHA-256 Functions
-//	upper case sigma0, sigma1 is "sum" here; sha256_sum0, sha256_sum1
+//	these four are intended as ISA extensions
+
+//	upper case sigma0, sigma1 is "sum"
 
 uint32_t sha256_sum0(uint32_t rs1, uint32_t rs2)
 {
@@ -22,7 +24,7 @@ uint32_t sha256_sum1(uint32_t rs1, uint32_t rs2)
 	return rs1 + (rv_ror(rs2,  6) ^ rv_ror(rs2, 11) ^ rv_ror(rs2, 25));
 }
 
-//	lower case sigma0, sigma1
+//	lower case sigma0, sigma1 is "sig"
 
 uint32_t sha256_sig0(uint32_t rs1, uint32_t rs2)
 {
@@ -35,22 +37,17 @@ uint32_t sha256_sig1(uint32_t rs1, uint32_t rs2)
 }
 
 //	nonlinear functions
+#define SHA256_CH(x, y, z) ((x & y) ^ rv_andn(z, x))
+#define SHA256_MAJ(x, y, z) (((z | x) & y) | (z & x))
 
-uint32_t ch(uint32_t x, uint32_t y, uint32_t z)
-{
-	return (x & y) ^ rv_andn(z, x);
-}
+//	processing step, sets "d" and "h" as a function of all 8 inputs
+//	and message schedule "mi", round constant "ki"
+#define SHA256R(a, b, c, d, e, f, g, h, mi, ki) {			\
+	h = sha256_sum1(h, e) + mi + SHA256_CH(e, f, g) + ki;	\
+	d = d + h;												\
+	h = sha256_sum0(h, a) + SHA256_MAJ(a, b, c);			}
 
-uint32_t maj(uint32_t x, uint32_t y, uint32_t z)
-{
-	return (x & y) ^ (x & z) ^ (y & z);
-}
-
-#define SHA256R(a, b, c, d, e, f, g, h, mi, ki) {		\
-	h = sha256_sum1(h, e) + mi + ch(e, f, g) + ki;				\
-	d = d + h;											\
-	h = sha256_sum0(h, a) + maj(a, b, c);						}
-
+//	keying step, sets x0 as a function of 4 inputs
 #define SHA256K(x0, x1, x9, xe)		\
 	x0 = sha256_sig0(x0, x1) + sha256_sig1(x9, xe);
 
@@ -58,7 +55,7 @@ uint32_t maj(uint32_t x, uint32_t y, uint32_t z)
 
 void rv32_sha256_compress(uint32_t *s, uint32_t *m)
 {
-	//	SHA-256 Round Constants, Sect 4.2.2.
+	//	4.2.2 SHA-224 and SHA-256 Constants
 
 	const uint32_t ck[64] = {
 		0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
@@ -101,7 +98,7 @@ void rv32_sha256_compress(uint32_t *s, uint32_t *m)
 
 	k = ck;
 
-	goto noexp;
+	goto skipks;								//	skip first key schedule
 
 	do {
 
@@ -114,7 +111,7 @@ void rv32_sha256_compress(uint32_t *s, uint32_t *m)
 		SHA256K(mc, md, m5, ma);	SHA256K(md, me, m6, mb);
 		SHA256K(me, mf, m7, mc);	SHA256K(mf, m0, m8, md);
 
-	noexp:
+	skipks:
 
 		SHA256R( a, b, c, d, e, f, g, h, m0, k[ 0] );
 		SHA256R( h, a, b, c, d, e, f, g, m1, k[ 1] );
@@ -142,5 +139,4 @@ void rv32_sha256_compress(uint32_t *s, uint32_t *m)
 	s[4] = s[4] + e;	s[5] = s[5] + f;
 	s[6] = s[6] + g;	s[7] = s[7] + h;
 }
-
 

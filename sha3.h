@@ -10,9 +10,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
-//	state context
+//	compute a SHA-3 hash "md" of "mdlen" bytes from data in "in"
+void *sha3(uint8_t *md, int mdlen, const void *in, size_t inlen);
 
-typedef struct {
+typedef struct {							//	state context
 	union {									//	aligned:
 		uint8_t b[200];						//	8-bit bytes
 		uint64_t d[25];						//	64-bit words
@@ -28,13 +29,10 @@ void rv32_keccakp(void *);					//	rv32_keccakp.c
 void rv64_keccakp(void *);					//	rv64_keccakp.c
 //void ref_keccakp(void *);					//	ref_keccakp.c ("reference")
 
-//	compute a SHA-3 hash "md" of "mdlen" bytes from data in "in"
-void *sha3(uint8_t *md, int mdlen, const void *in, size_t inlen);
-
-//	OpenSSL - like interfece
-int sha3_init(sha3_ctx_t *c, int mdlen);	//	mdlen = hash output in bytes
-int sha3_update(sha3_ctx_t *c, const void *data, size_t len);
-int sha3_final(uint8_t *md, sha3_ctx_t *c); //	digest goes to md
+//	incremental interfece
+void sha3_init(sha3_ctx_t *c, int mdlen);	//	mdlen = hash output in bytes
+void sha3_update(sha3_ctx_t *c, const void *data, size_t len);
+void sha3_final(uint8_t *md, sha3_ctx_t *c); // digest goes to md
 
 //	SHAKE128 and SHAKE256 extensible-output functions
 #define shake128_init(c) sha3_init(c, 16)
