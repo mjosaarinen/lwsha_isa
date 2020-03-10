@@ -16,16 +16,6 @@
 #define CH(x, y, z) ((x & y) ^ rv_andn(z, x))
 #define MAJ(x, y, z) (((z | x) & y) | (z & x))
 
-uint32_t sm3_p0(uint32_t x)
-{
-	return x ^ rv_ror(x, 23) ^ rv_ror(x, 15);
-}
-
-uint32_t sm3_p1(uint32_t x, uint32_t y)
-{
-	return x ^ rv_ror(x, 17) ^ rv_ror(x,  9) ^ rv_ror(y, 25);
-}
-
 //	compression function (this one does *not* modify m[16])
 
 void rv32_sm3_compress(uint32_t *s, uint32_t *m)
@@ -34,7 +24,7 @@ void rv32_sm3_compress(uint32_t *s, uint32_t *m)
 	uint32_t	a, b, c, d, e, f, g, h;
 
 	uint32_t 	w[68];
-	uint32_t	ff, gg, tt1, tt2, ss1, ss2, tj;
+	uint32_t	t, u, tj;
 
 	a = s[0];	b = s[1];	c = s[2];	d = s[3];
 	e = s[4];	f = s[5];	g = s[6];	h = s[7];
@@ -47,38 +37,64 @@ void rv32_sm3_compress(uint32_t *s, uint32_t *m)
 	//	linear schedule
 
 	for (i = 16; i < 68; i++) {
-		w[i] = sm3_p1(w[i - 16] ^ 
-					w[i - 9] ^ 	rv_ror(w[i - 3], 17), 
-						w[i - 13]) ^ w[i - 6];
+		t = w[i - 16] ^ w[i - 9] ^ rv_ror(w[i - 3], 17);
+		w[i] = t ^ rv_ror(t, 17) ^ rv_ror(t,  9)
+				^ w[i - 6] ^ rv_ror(w[i - 13], 25);
 	}
 
-	for (i = 0; i < 64; i++) {
+	for (i = 0; i < 16; i++) {
+
 
 		//	round constant
-		tj = i < 16 ? 0x79CC4519 : 0x7A879D8A;
-		tj = rv_ror(tj, (-i) & 0x1F);
+		tj = rv_ror(0x79CC4519, (-i) & 0x1F);
 
-		ss1 = rv_ror(rv_ror(a, 20) + e + tj, 25);
-		ss2 = ss1 ^ rv_ror(a, 20);
+		t = rv_ror(a, 20);
+		u = rv_ror(t + e + tj, 25);
+		t = t ^ u;
 
-		ff = i < 16 ? a ^ b ^ c : MAJ(a, b, c);
-		gg = i < 16 ? e ^ f ^ g : CH(e, f, g);
+		//	left track
 
-		tt1 = ff + d + ss2 + (w[i] ^ w[i + 4]);
-		tt2 = gg + h + ss1 + w[i];
-	
+		t = t + (a ^ b ^ c) + d + (w[i] ^ w[i + 4]);
 		d = c;
 		c = rv_ror(b, 23);
 		b = a;
-		a = tt1;
+		a = t;
+
+		//	right track
+
+		u = (e ^ f ^ g) + h + u + w[i];
 		h = g;
 		g = rv_ror(f, 13);
 		f = e;
-		e = sm3_p0(tt2);
-/*
-		printf("%2d: %08X %08X %08X %08X %08X %08X %08X %08X\n",
-			i, 	a, b, c, d, e, f, g, h);
-*/
+		e = u ^ rv_ror(u, 23) ^ rv_ror(u, 15);
+	}
+
+
+	for (i = 16; i < 64; i++) {
+
+		//	round constant
+		tj = rv_ror(0x7A879D8A, (-i) & 0x1F);
+
+		t = rv_ror(a, 20);
+		u = rv_ror(t + e + tj, 25);
+		t = t ^ u;
+
+		//	left track
+
+		t = d + MAJ(a, b, c) + t + (w[i] ^ w[i + 4]);
+		d = c;
+		c = rv_ror(b, 23);
+		b = a;
+		a = t;
+
+		//	right track
+
+		u = h + CH(e, f, g) + u + w[i];
+		h = g;
+		g = rv_ror(f, 13);
+		f = e;
+		e = u ^ rv_ror(u, 23) ^ rv_ror(u, 15);
+
 	}
 
 	s[0] = s[0] ^ a;	s[1] = s[1] ^ b;

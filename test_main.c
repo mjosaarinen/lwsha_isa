@@ -8,11 +8,15 @@
 int test_sha2s();			//	test_sha2.c
 int test_sha3s();			//	test_sha3.c
 
+int tek();
+
 //	stub main
 
 int main(int argc, char **argv)
 {
 	int fail = 0;
+
+	return tek();
 
 	fail += test_sha2s();
 	fail += test_sha3s();
