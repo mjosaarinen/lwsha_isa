@@ -4,7 +4,7 @@
 
 //	Bit-interleaved FIPS 202 Keccak permutation for a 32-bit target.
 
-#include "insns.h"
+#include "bitmanip.h"
 
 //	interleave the state (for input)
 

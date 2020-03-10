@@ -37,12 +37,19 @@ int test_sha256()
 	int fail = 0;
 	int i;
 
-	sha256(md, "abc", 3);
+	//	SHA-224
+	sha2_224(md, in, readhex(in, sizeof(in), "10713B894DE4A734C0"));
+	fail += chkhex("SHA2-224", md, 28,
+ 		"03842600C86F5CD60C3A2147A067CB962A05303C3488B05CB45327BD");
+
+	//	SHA-256
+	sha2_256(md, "abc", 3);
 	fail += chkhex("SHA2-256", md, 32,
 		"BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD");
 
+	//	padding tests
 	for (i = 0; sha256_tv[i][0] != NULL; i++) {
-		sha256(md, in, readhex(in, sizeof(in), sha256_tv[i][0]));
+		sha2_256(md, in, readhex(in, sizeof(in), sha256_tv[i][0]));
 		fail += chkhex("SHA2-256", md, 32, sha256_tv[i][1]);
 	}
 

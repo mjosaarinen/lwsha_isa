@@ -7,7 +7,7 @@
 #include "sha2.h"
 
 //	bitmanip (emulation) prototypes here
-#include "insns.h"
+#include "bitmanip.h"
 
 //	4.1.2 SHA-224 and SHA-256 Functions
 //	upper case sigma0, sigma1 is "sum" here; sha256_sum0, sha256_sum1

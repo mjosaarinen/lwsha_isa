@@ -10,9 +10,12 @@
 //	These functions have not been optimized for performance -- they are
 //	here just to facilitate testing of the permutation code implementations.
 
+#include <stdio.h>
+#include <stdlib.h>
+
 //	pointer to the function
 
-void (*sha3_keccakp)(void *) = &ref_keccakp;
+void (*sha3_keccakp)(void *) = rv32_keccakp;
 
 //	initialize the context for SHA3
 

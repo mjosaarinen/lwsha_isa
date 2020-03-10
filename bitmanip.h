@@ -1,11 +1,11 @@
-//	insns.h
+//	bitmanip.h
 //	2020-03-07	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
 //	bitmanip instruction emulation code
 
-#ifndef _INSNS_H_
-#define _INSNS_H_
+#ifndef _BITMANIP_H_
+#define _BITMANIP_H_
 
 #include <stdint.h>
 

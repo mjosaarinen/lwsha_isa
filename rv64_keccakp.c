@@ -4,7 +4,7 @@
 
 //	FIPS 202 Keccak permutation implementation for a 64-bit target.
 
-#include "insns.h"
+#include "bitmanip.h"
 
 //	Keccak-p[1600,24](S)
 
@@ -30,6 +30,7 @@ void rv64_keccakp(void *s)
 	//	load state, little endian, aligned
 
 	uint64_t	*vs = (uint64_t *) s;
+
 	sa = vs[ 0]; sb = vs[ 1]; sc = vs[ 2]; sd = vs[ 3]; se = vs[ 4];
 	sf = vs[ 5]; sg = vs[ 6]; sh = vs[ 7]; si = vs[ 8]; sj = vs[ 9];
 	sk = vs[10]; sl = vs[11]; sm = vs[12]; sn = vs[13]; so = vs[14];

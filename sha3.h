@@ -24,9 +24,9 @@ typedef struct {
 extern void (*sha3_keccakp)(void *);
 
 //	which is set to point to an external function, one of:
-void ref_keccakp(void *);					//	ref_keccakp.c ("reference")
 void rv32_keccakp(void *);					//	rv32_keccakp.c
 void rv64_keccakp(void *);					//	rv64_keccakp.c
+//void ref_keccakp(void *);					//	ref_keccakp.c ("reference")
 
 //	compute a SHA-3 hash "md" of "mdlen" bytes from data in "in"
 void *sha3(uint8_t *md, int mdlen, const void *in, size_t inlen);

@@ -1,10 +1,10 @@
-//	insns.c
+//	bitmanip.c
 //	2020-03-07	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
 //	instruction emulation code -- these are all from bitmanip
 
-#include "insns.h"
+#include "bitmanip.h"
 
 //	rotate right ROR / RORI
 
