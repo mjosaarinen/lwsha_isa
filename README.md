@@ -65,14 +65,12 @@ current permutation-based NIST cryptography (even beyond FIPS 202).
 	The 1600-bit state and temporary registers fit into the register file,
 	although a C compiler may not be able to do that.
 * [rv32_keccakp.c](rv32_keccakp.c) is an RV32 implementation that uses
-	the bit interleaving technique; this is accomplished with the
+	the even/odd bit interleaving technique; this is accomplished with the
 	help of bitmanip SHFL and UNSHFL instructions -- however these are
-	outside the main loop so an implementation could do without.
-	This implementation loops some operations to show how offsets
-	can be used and can split each 64-bit rotation into one or two 32-bit
-	rotations, thanks to the bit-interleaving technique.
-	We have 162 × XOR, 52 × RORI, 50 × ANDN and a large number of 
-	loads and stores -- optimization of which is nontrivial.
+	outside the main loop and not really critical.
+	The benefit inside the main loop is that each 64-bit rotation into one 
+	or two 32-bit rotations. We have 152 × XOR, 52 × RORI, 50 × ANDN and a
+	large number of loads and stores -- optimization of which is nontrivial.
 
 **Observations:** we found it preferable to use the standard RISC-V 
 offset indexing loads and stores without any need for special index

@@ -77,7 +77,7 @@ void rv32_keccakp(void *s)
 
 		//	Theta
 
-		for (p = v; p != &v[40]; p += 10) {
+		for (p = v; p != &v[40]; p += 10) {		//	(4 iterations)
 			u0 = u0 ^ p[0];			u1 = u1 ^ p[1];
 			t2 = t2 ^ p[2];			t3 = t3 ^ p[3];
 			t4 = t4 ^ p[4];			t5 = t5 ^ p[5];
@@ -146,7 +146,7 @@ void rv32_keccakp(void *s)
 
 		//	Chi
 
-		for (p = v; p <= &v[40]; p += 10) {
+		for (p = v; p <= &v[40]; p += 10) {		//	(5 iterations)
 			u0 = p[0];	t2 = p[2];	t4 = p[4];	t6 = p[6];	t8 = p[8];
 			u1 = p[1];	t3 = p[3];	t5 = p[5];	t7 = p[7];	t9 = p[9];
 			t0 = rv_andn(t8, t6);		t1 = rv_andn(t9, t7);
