@@ -50,7 +50,20 @@ The cryptographic permutation Keccak-p is used via a function pointer
 this 1600-bit, 24-round keyless permutation that is the foundation of all
 current permutation-based NIST cryptography (even beyond FIPS 202).
 
-##	SHA-2
 
+**Disclaimer and Status**
 
+*   [PQShield](https://pqshield.com) offers no warranty or specific claims of
+    standards compliance nor does not endorse this proposal above other
+    proposals. PQShield may or may not implement SHA-2, SHA-3, SM3 or other
+	algorithms according to this proposal in the future.
+*   Despite being proposed in a personal capacity, this proposal
+    constitutes a "contribution" as defined in Section 1.4 of the
+    RISC-V foundation membership agreement.
+*   This distribution is offered under MIT license agreement, so you're free
+    to use the pseudocode to build actual cipher implementations (that's
+    what it's for).
+
+Cheers,
+- markku
 
