@@ -140,14 +140,14 @@ although data path size differs 32/64-bit).
 
 Hence we have the following core instruction mix:
 
-	| Insn		|	K 	|	R	| SHA2-224/256 	| SHA2-384/512	|
-	|----------:|------:|------:|--------------:|--------------:|
-	| ADD		|	1	|	5	|	368			|	464			|
-	| AND		|	0	|	3	|	192			|	240			|
-	| ANDN		|	0	|	1	|	64			|	80			|
-	| OR		|	0	|	2	|	128			|	160			|
-	| SHAx		|	2	|	2	|	224			|	288			|
-	| **Total**	|	3	|	13	|	**976**		|	**1232**	|
+| Insn		|	K 	|	R	| SHA2-224/256 	| SHA2-384/512	|
+|----------:|------:|------:|--------------:|--------------:|
+| ADD		|	1	|	5	|	368			|	464			|
+| AND		|	0	|	3	|	192			|	240			|
+| ANDN		|	0	|	1	|	64			|	80			|
+| OR		|	0	|	2	|	128			|	160			|
+| SHAx		|	2	|	2	|	224			|	288			|
+| **Total**	|	3	|	13	|	**976**		|	**1232**	|
 
 Each SHAx instruction would decompose into 6-12 base instructions (even with
 rotate), so this is a significant speedup (3 × faster or more). The ADD fused
