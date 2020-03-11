@@ -150,7 +150,7 @@ Hence we have the following core loop instruction mix:
 | **Total**	|	3	|	13	|	**976**		|	**1232**	|
 
 Each SHAx instruction would decompose into 6-12 base instructions (even with
-rotate), so this is a significant speedup (3 × faster or more). The ADD 
+rotate), so this is a significant speedup (2 × faster or more). The ADD 
 fused here is just an opportunistic 20% performance improvement over the
 current spec.
 
