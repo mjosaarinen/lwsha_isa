@@ -68,9 +68,10 @@ current permutation-based NIST cryptography (even beyond FIPS 202).
 	the even/odd bit interleaving technique; this is accomplished with the
 	help of bitmanip SHFL and UNSHFL instructions -- however these are
 	outside the main loop and not really critical.
-	The benefit inside the main loop is that each 64-bit rotation into one 
-	or two 32-bit rotations. We have 152 × XOR, 52 × RORI, 50 × ANDN and a
-	large number of loads and stores -- optimization of which is nontrivial.
+	The benefit inside the main loop is that each 64-bit rotation can be
+	implemented with one or two independent 32-bit rotations. We have 
+	152 × XOR, 52 × RORI, 50 × ANDN and a large number of loads and stores --
+	optimization of which is nontrivial.
 
 **Observations:** we found it preferable to use the standard RISC-V 
 offset indexing loads and stores without any need for special index
