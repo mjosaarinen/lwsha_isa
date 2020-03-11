@@ -59,12 +59,12 @@ The cryptographic permutation Keccak-p is used via a function pointer
 this 1600-bit, 24-round keyless permutation that is the foundation of all
 current permutation-based NIST cryptography (even beyond FIPS 202).
 
-* [rv64_keccakp.c](rv64_keccakp.c) is a RV64 implementation that uses
+* [rv64_keccakp.c](rv64_keccakp.c) is an RV64 implementation that uses
 	(per round) 76 × XOR, 29 × RORIW, and 25 × ANDN, and few auxiliary
 	ops for loading a round constant and looping.
 	The 1600-bit state and temporary registers fit into the register file,
 	although a C compiler may not be able to do that.
-* [rv32_keccakp.c](rv32_keccakp.c) is a RV32 implementation that uses
+* [rv32_keccakp.c](rv32_keccakp.c) is an RV32 implementation that uses
 	the bit interleaving technique; this is accomplished with the
 	help of bitmanip SHFL and UNSHFL instructions -- however these are
 	outside the main loop so an implementation could do without.
@@ -74,9 +74,9 @@ current permutation-based NIST cryptography (even beyond FIPS 202).
 	We have 162 × XOR, 52 × RORI, 50 × ANDN and a large number of 
 	loads and stores -- optimization of which is nontrivial.
 
-**Observations:** we found it preferable to use the the standard RISC-V 
+**Observations:** we found it preferable to use the standard RISC-V 
 offset indexing loads and stores without any need for special index
-computation as proposed in "Scalar SHA3 Accelleration" instructions.
+computation as proposed in "Scalar SHA3 Acceleration" instructions.
 ROR and ANDN are typically expected in ISAs, although they are missing
 from the RV32I/RV64I base -- here they give up to 50% performance
 boost, but the main advantage is really the large register file.
@@ -84,7 +84,7 @@ boost, but the main advantage is really the large register file.
 ##	SHA-2
 
 The SHA-2 code explores the use of special instructions for "Scalar SHA2 
-Acceleration", which offer to accellerate all SHA2 algorithms on RV64 and
+Acceleration", which offer to accelerate all SHA2 algorithms on RV64 and
 SHA2-224/256 on RV32. 
 
 These instructions implement the "sigma functions" defined in Sections 
@@ -125,8 +125,8 @@ uint32_t sha256_sig1(uint32_t rs1, uint32_t rs2)
 We have:
 
 *	[rv32_sha256.c](rv32_sha256.c) is an implementation of the SHA2-224/256
-	compression function on RV32 -- the RV64 implementation is probably
-	equivalent.
+	compression function on RV32 (the RV64 implementation is probably
+	equivalent).
 *	[rv64_sha512.c](rv32_sha512.c) is an implementation of the SHA2-384/512
 	compression function on RV64.
 
@@ -140,8 +140,8 @@ although data path size differs 32/64-bit).
 
 Hence we have the following core instruction mix:
 
-	| Insn		|K step	|R step | SHA2-224/256 	| SHA2-384/512	|
-	|-----------|------:|------:|--------------:|--------------:|
+	| Insn		|	K 	|	R	| SHA2-224/256 	| SHA2-384/512	|
+	|----------:|------:|------:|--------------:|--------------:|
 	| ADD		|	1	|	5	|	368			|	464			|
 	| AND		|	0	|	3	|	192			|	240			|
 	| ANDN		|	0	|	1	|	64			|	80			|
@@ -154,10 +154,10 @@ rotate), so this is a significant speedup (3 × faster or more). The ADD fused
 is just an opportunistic 20% performance impact over the current spec.
 
 SHA2-384/512 on RV32 is not tackled yet; implementing its entirely 
-64-bit data paths on RV32 is challenging and the large number of additions
-will result in a lot of SLTUs. Those addition also make the interleaving
-technique used for SHA-3 unusable and therefore there may be a need
-for funnel shifts after all.
+64-bit data paths on RV32 is challenging. The large number of 64-bit additions
+will result in a lot of SLTUs because RISC-V has no carry. Those additions 
+also make the interleaving technique used for SHA-3 unusable and therefore
+there may be a need for funnel shifts.
 
 
 ####	Disclaimer and Status
