@@ -4,8 +4,7 @@ March 11, 2020  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 
 ##	Description
 
-RISC-V design exploration for the primary current and near future hash
-function standards:
+RISC-V design exploration for the primary hash function standards:
 
 *	**SHA-3**: 
 	*"SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions"* 
