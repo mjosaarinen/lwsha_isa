@@ -49,7 +49,7 @@ uint64_t sha512_sig1(uint64_t rs1, uint64_t rs2)
 	h = h + (((a | c) & b) | (c & a));				}
 
 //	keying step, sets x0 as a function of 4 inputs
-#define SHA512K(x0, x1, x9, xe)	{	\
+#define SHA512K(x0, x1, x9, xe) {	\
 	x0 = x0 + x9;					\
 	x0 = sha512_sig0(x0, x1);		\
 	x0 = sha512_sig1(x0, xe); }

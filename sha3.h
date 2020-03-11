@@ -42,8 +42,8 @@ void sha3_final(uint8_t *md, sha3_ctx_t *c); // digest goes to md
 //	add padding (call once after calls to shake_update() are done
 void shake_xof(sha3_ctx_t *c);
 
-//	squeeze output
-void shake_out(sha3_ctx_t *c, void *out, size_t len);
+//	squeeze output (can call repeat)
+void shake_out(uint8_t *out, size_t len, sha3_ctx_t *c);
 
 #endif
 

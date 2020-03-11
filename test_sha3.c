@@ -114,14 +114,14 @@ int test_shake()
 	shake_update(&sha3, in,
 		readhex(in, sizeof(in), "7216A825029DA1"));
 	shake_xof(&sha3);
-	shake_out(&sha3, md, 16);
+	shake_out(md, 16, &sha3);
 	fail += chkhex("SHAKE128", md, 16, "9DE6FFACF3E59693A3DE81B02F7DB77A");
 
 	shake256_init(&sha3);
 	shake_update(&sha3, in,
 		readhex(in, sizeof(in), "FDBFF9BF3FB910A92D25651EBBFBA365"));
 	shake_xof(&sha3);
-	shake_out(&sha3, md, 32);
+	shake_out(md, 32, &sha3);
 	fail += chkhex("SHAKE256", md, 32,
 		"89F2373E131A899B4BA27F6DA606716A5E289FD530AE066BB8B11DC023DACBD6");
 
@@ -139,7 +139,7 @@ int test_shake()
 		shake_xof(&sha3);				// switch to extensible output
 
 		for (j = 0; j < 512; j += 32)	// output. discard bytes 0..479
-			shake_out(&sha3, md, 32);
+			shake_out(md, 32, &sha3);
 
 		// compare to reference
 

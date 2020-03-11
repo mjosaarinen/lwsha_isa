@@ -10,7 +10,7 @@
 //	These functions have not been optimized for performance -- they are
 //	here just to facilitate testing of the permutation code implementations.
 
-//	externally visible pointer to the permutation implementation 
+//	externally visible pointer to the permutation implementation
 
 void (*sha3_keccakp)(void *) = rv64_keccakp;
 
@@ -56,7 +56,7 @@ void sha3_final(uint8_t *md, sha3_ctx_t *c)
 	sha3_keccakp(c->st.d);
 
 	for (i = 0; i < c->mdlen; i++) {
-		((uint8_t *) md)[i] = c->st.b[i];
+		md[i] = c->st.b[i];
 	}
 }
 
@@ -87,7 +87,7 @@ void shake_xof(sha3_ctx_t *c)
 
 //	squeeze output
 
-void shake_out(sha3_ctx_t *c, void *out, size_t len)
+void shake_out(uint8_t *out, size_t len, sha3_ctx_t *c)
 {
 	size_t i;
 	int j;
@@ -98,7 +98,7 @@ void shake_out(sha3_ctx_t *c, void *out, size_t len)
 			sha3_keccakp(c->st.d);
 			j = 0;
 		}
-		((uint8_t *) out)[i] = c->st.b[j++];
+		out[i] = c->st.b[j++];
 	}
 	c->pt = j;
 }
