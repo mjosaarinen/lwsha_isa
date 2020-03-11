@@ -83,7 +83,8 @@ boost, but the main advantage is really the large register file.
 
 The SHA-2 code explores the use of special instructions for "Scalar SHA2 
 Acceleration", which offer to accelerate all SHA2 algorithms on RV64 and
-SHA2-224/256 on RV32. 
+SHA2-224/256 on RV32.  The file [sha2.c](sha2.c) provides padding testing
+wrappers and is used by the unit tests in [test_sha2.c](test_sha2.c).
 
 These instructions implement the "sigma functions" defined in Sections 
 4.1.2 and 4.1.3 of FIPS 180-4. By convention, I'll write the upper case
