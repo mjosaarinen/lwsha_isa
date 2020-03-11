@@ -4,7 +4,8 @@ March 11, 2020  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 
 ##	Description
 
-RISC-V design exploration for the primary hash function standards:
+[RISC-V](https://riscv.org/) design exploration for the primary hash
+function standards:
 
 *	**SHA-3**: 
 	*"SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions"* 
@@ -29,11 +30,9 @@ This work is related to the following RISC-V Extension profiles which
 are also works in progress.
 
 *	**Crypto**:
-	[The RISC-V Crypto Extension](https://github.com/scarv/riscv-crypto)
-	working repo.
+	[The RISC-V Crypto Extension](https://github.com/scarv/riscv-crypto).
 *	**Bitmanip**:
-	[The RISC-V Bitmanip Extension](https://github.com/riscv/riscv-bitmanip)
-	working repo.
+	[The RISC-V Bitmanip Extension](https://github.com/riscv/riscv-bitmanip).
 
 As is being done with ["lwaes_isa"](https://github.com/mjosaarinen/lwaes_isa) 
 for AES-128/192/256 and SM4 block ciphers, we hope to extend this eventually
