@@ -150,9 +150,9 @@ int test_shake()
 	return fail;
 }
 
-//	main tests
+//	all tests
 
-int test_sha3s()
+int test_sha3_all()
 {
 	int fail = 0;
 

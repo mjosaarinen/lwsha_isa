@@ -7,6 +7,8 @@
 #include "test_hex.h"
 #include "sha2.h"
 
+//	SHA2-224/256
+
 int test_sha256()
 {
 	const char *sha256_tv[][2] = {
@@ -54,6 +56,8 @@ int test_sha256()
 	return fail;
 }
 
+//	SHA2-384/512
+
 int test_sha512()
 {
 	uint8_t md[64], in[256];
@@ -87,11 +91,12 @@ int test_sha512()
 		"8E959B75DAE313DA8CF4F72814FC143F8F7779C6EB9F7FA17299AEADB6889018"
 		"501D289E4900F7E4331B99DEC4B5433AC7D329EEB6DD26545E96E55B874BE909");
 
-
 	return fail;
 }
 
-int test_sha2s()
+//	all tests
+
+int test_sha2_all()
 {
 	int fail = 0;
 
