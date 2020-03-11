@@ -7,12 +7,14 @@ March 11, 2020  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 RISC-V design exploration for the primary current and near future hash
 function standards:
 
-*	**SHA-3**: [FIPS PUB 202](https://doi.org/10.6028/NIST.FIPS.202)
-	"SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions"
-	algorithms SHA3-224, SHA3-256, SHA3-384, SHA3-512, SHAKE128 and SHAKE256.
-*	**SHA-2**: [FIPS PUB 180-4](https://doi.org/10.6028/NIST.FIPS.180-4)
-	"Secure Hash Standard (SHS)" algorithms SHA-224, SHA-256, SHA-384, and
-	SHA-512. These are denoted as SHA2-xxx here to avoid confusion.
+*	**SHA-3**: 
+	*"SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions"* 
+	([FIPS PUB 202](https://doi.org/10.6028/NIST.FIPS.202))
+	algorithms SHA3-224, SHA3-256, SHA3-384, SHA3-512, SHAKE128, and SHAKE256.
+*	**SHA-2**: *"Secure Hash Standard (SHS)"* 
+	([FIPS PUB 180-4](https://doi.org/10.6028/NIST.FIPS.180-4))
+	algorithms SHA-224, SHA-256, SHA-384, and SHA-512.
+	These older functions are denoted as SHA2-xxx to avoid confusion.
 
 Currently this repository contains "runnable pseudocode" implementations
 and unit tests for all. Running `make` followed by `./xtest` should execute
@@ -28,11 +30,13 @@ This work is related to the following RISC-V Extension profiles which
 are also works in progress.
 
 *	**Crypto**:
-	(The RISC-V Crypto Extension))[https://github.com/scarv/riscv-crypto].
+	[The RISC-V Crypto Extension](https://github.com/scarv/riscv-crypto)
+	working repo.
 *	**Bitmanip**:
-	(The RISC-V Bitmanip Extension)[https://github.com/riscv/riscv-bitmanip].
+	[The RISC-V Bitmanip Extension](https://github.com/riscv/riscv-bitmanip)
+	working repo.
 
-As is being done with [lwaes_isa](https://github.com/mjosaarinen/lwaes_isa) 
+As is being done with ["lwaes_isa"](https://github.com/mjosaarinen/lwaes_isa) 
 for AES-128/192/256 and SM4 block ciphers, we hope to extend this eventually
 to full freely usable assembler listings of these primitives -- an open
 source "performance library" of sorts.
