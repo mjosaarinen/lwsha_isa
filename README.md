@@ -127,7 +127,7 @@ We have:
 *	[rv32_sha256.c](rv32_sha256.c) is an implementation of the SHA2-224/256
 	compression function on RV32 (the RV64 implementation is probably
 	equivalent).
-*	[rv64_sha512.c](rv32_sha512.c) is an implementation of the SHA2-384/512
+*	[rv64_sha512.c](rv64_sha512.c) is an implementation of the SHA2-384/512
 	compression function on RV64.
 
 For both of these implementations the state is 8 words and each message
