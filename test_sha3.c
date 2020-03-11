@@ -146,7 +146,6 @@ int test_shake()
 		fail += chkhex(shake_tv[i][0], md, 32, shake_tv[i][1]);
 	}
 
-
 	return fail;
 }
 

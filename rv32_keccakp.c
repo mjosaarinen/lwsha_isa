@@ -6,9 +6,9 @@
 
 #include "bitmanip.h"
 
-//	interleave the state (for input)
+//	even/odd bit split the state words (for input)
 
-void kp_intrlv50(uint32_t v[50])
+void rv32_keccakp_split(uint32_t v[50])
 {
 	uint32_t t0, t1, *p;
 
@@ -21,9 +21,9 @@ void kp_intrlv50(uint32_t v[50])
 	}
 }
 
-//	un-interleave the state (for output)
+//	even/odd bit join the halves of the state words (for output)
 
-void kp_untrlv50(uint32_t v[50])
+void rv32_keccakp_join(uint32_t v[50])
 {
 	uint32_t t0, t1, *p;
 
@@ -61,9 +61,10 @@ void rv32_keccakp(void *s)
 	uint32_t	*p;
 	uint32_t	*v = (uint32_t *) s;
 
-	//	interleave the state (this can be outside the function)
+	//	64-bit word even/odd bit split for the entire state ("un-interleave")
+	//	we should have this outside the function for multi-block processing
 
-	kp_intrlv50(v);
+	rv32_keccakp_split(v);
 
 	//	(passed between rounds, initial load)
 
@@ -164,8 +165,9 @@ void rv32_keccakp(void *s)
 		v[ 0] = t0 ^ q[0];	v[ 1] = t1 ^ q[1];
 	}
 
-	//	un-interleave (this can be outside the function)
+	//	64-bit word even/odd bit state final join for output ("interleave")
+	//	we should have this outside the function for multi-block processing
 
-	kp_untrlv50(v);
+	rv32_keccakp_join(v);
 }
 

@@ -10,10 +10,7 @@
 //	These functions have not been optimized for performance -- they are
 //	here just to facilitate testing of the permutation code implementations.
 
-#include <stdio.h>
-#include <stdlib.h>
-
-//	pointer to the function
+//	externally visible pointer to the permutation implementation 
 
 void (*sha3_keccakp)(void *) = rv64_keccakp;
 
