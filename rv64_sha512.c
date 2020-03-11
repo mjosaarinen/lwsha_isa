@@ -36,20 +36,23 @@ uint64_t sha512_sig1(uint64_t rs1, uint64_t rs2)
 	return rs1 + (rv_rorw(rs2, 19) ^ rv_rorw(rs2, 61) ^ (rs2 >> 6));
 }
 
-//	nonlinear functions
-#define SHA512_CH(x, y, z) ((x & y) ^ rv_andn(z, x))
-#define SHA512_MAJ(x, y, z) (((z | x) & y) | (z & x))
+//	(((a | c) & b) | (c & a)) = Maj(a, b, c)
+//	((e & f) ^ rv_andn(g, e)) = Ch(e, f, g)
 
 //	processing step, sets "d" and "h" as a function of all 8 inputs
 //	and message schedule "mi", round constant "ki"
-#define SHA512R(a, b, c, d, e, f, g, h, mi, ki) {			\
-	h = sha512_sum1(h, e) + mi + SHA512_CH(e, f, g) + ki;	\
-	d = d + h;												\
-	h = sha512_sum0(h, a) + SHA512_MAJ(a, b, c);			}
+#define SHA512R(a, b, c, d, e, f, g, h, mi, ki) {	\
+	h = h + ((e & f) ^ rv_andn(g, e)) + mi + ki;	\
+	h = sha512_sum1(h, e);							\
+	d = d + h;										\
+	h = sha512_sum0(h, a);							\
+	h = h + (((a | c) & b) | (c & a));				}
 
 //	keying step, sets x0 as a function of 4 inputs
-#define SHA512K(x0, x1, x9, xe)		\
-	x0 = sha512_sig0(x0, x1) + sha512_sig1(x9, xe);
+#define SHA512K(x0, x1, x9, xe)	{	\
+	x0 = x0 + x9;					\
+	x0 = sha512_sig0(x0, x1);		\
+	x0 = sha512_sig1(x0, xe); }
 
 //	compression function (this one does *not* modify m[16])
 

@@ -36,16 +36,21 @@ are also works in progress.
 *	**Bitmanip**:
 	[RISC-V Bitmanip (Bit Manipulation) Extension](https://github.com/riscv/riscv-bitmanip). Draft version of January 29, 2020.
 
+We are essentially complementing the analysis done in the crypto extension
+with somewhat different algorithm implementation techniques.
+
 As is being done with ["lwaes_isa"](https://github.com/mjosaarinen/lwaes_isa) 
 for AES-128/192/256 and SM4 block ciphers, we hope to extend this eventually
 to full freely usable assembler listings of these primitives -- an open
-source "performance library" of sorts.
+source "performance library" of sorts. 
 
+Unlike with AES, these instructions are not required for resistance against 
+cache-timing attacks, which is not an issue for any of them. 
 
 ##	SHA-3
 
 The SHA-3 implementations utilize a subset of bitmanip instructions only, 
-which are emulated by functions in [bitmanip.c](bitmanip.h). The file 
+which are emulated by functions in [bitmanip.c](bitmanip.c). The file 
 [sha3.c](sha3.c) provides padding testing wrappers and is used by the unit 
 tests in [test_sha3.c](test_sha3.c). These are not subject to optimization.
 
@@ -78,7 +83,81 @@ boost, but the main advantage is really the large register file.
 
 ##	SHA-2
 
-The SHA-2 code explores the use of special instructions 
+The SHA-2 code explores the use of special instructions for "Scalar SHA2 
+Acceleration", which offer to accellerate all SHA2 algorithms on RV64 and
+SHA2-224/256 on RV32. 
+
+These instructions implement the "sigma functions" defined in Sections 
+4.1.2 and 4.1.3 of FIPS 180-4. By convention, I'll write the upper case
+sigma letter Σ as "sum" and lower case σ as "sig".
+This naming convention is arbitrary and I'll change it later.
+
+We currently diverge from the specification somewhat as we expand them into
+two-input functions that also perform an ADD operation. The operands are
+selected so that we may have RS1=RD to save opcode space, as can be done with
+lightweight AES. They are composed of three shifts/rotations, two XORs, 
+and one addition each.
+
+Their emulation functions are in respective compression funciton 
+implementation files. For example for SHA-256 we have:
+```C
+uint32_t sha256_sum0(uint32_t rs1, uint32_t rs2)
+{
+    return rs1 + (rv_ror(rs2,  2) ^ rv_ror(rs2, 13) ^ rv_ror(rs2, 22));
+}
+
+uint32_t sha256_sum1(uint32_t rs1, uint32_t rs2)
+{
+    return rs1 + (rv_ror(rs2,  6) ^ rv_ror(rs2, 11) ^ rv_ror(rs2, 25));
+}
+
+uint32_t sha256_sig0(uint32_t rs1, uint32_t rs2)
+{
+    return rs1 + (rv_ror(rs2,  7) ^ rv_ror(rs2, 18) ^ (rs2 >>  3));
+}
+
+uint32_t sha256_sig1(uint32_t rs1, uint32_t rs2)
+{
+    return rs1 + (rv_ror(rs2, 17) ^ rv_ror(rs2, 19) ^ (rs2 >> 10));
+}
+```
+
+We have:
+
+*	[rv32_sha256.c](rv32_sha256.c) is an implementation of the SHA2-224/256
+	compression function on RV32 -- the RV64 implementation is probably
+	equivalent.
+*	[rv64_sha512.c](rv32_sha512.c) is an implementation of the SHA2-384/512
+	compression function on RV64.
+
+For both of these implementations the state is 8 words and each message
+block is 16 words in both cases so these fit nicely in the register file. 
+
+There are two kinds of steps; message scheduling steps K and rounds R.
+SHA2-224/256 has 48 × K steps and 64 × R steps while SHA2-384/512 has 
+64 × K steps and 80 × R steps (their structure is equivalent on both,
+although data path size differs 32/64-bit).
+
+Hence we have the following core instruction mix:
+
+	| Insn		|K step	|R step | SHA2-224/256 	| SHA2-384/512	|
+	|-----------|------:|------:|--------------:|--------------:|
+	| ADD		|	1	|	5	|	368			|	464			|
+	| AND		|	0	|	3	|	192			|	240			|
+	| ANDN		|	0	|	1	|	64			|	80			|
+	| OR		|	0	|	2	|	128			|	160			|
+	| SHAx		|	2	|	2	|	224			|	288			|
+	| **Total**	|	3	|	13	|	**976**		|	**1232**	|
+
+Each SHAx instruction would decompose into 6-12 base instructions (even with
+rotate), so this is a significant speedup (3 × faster or more). The ADD fused
+is just an opportunistic 20% performance impact over the current spec.
+
+SHA2-384/512 on RV32 is not tackled yet; implementing its entirely 
+64-bit data paths on RV32 is challenging and the large number of additions
+will result in a lot of SLTUs. Those addition also make the interleaving
+technique used for SHA-3 unusable and therefore there may be a need
+for funnel shifts after all.
 
 
 ####	Disclaimer and Status
