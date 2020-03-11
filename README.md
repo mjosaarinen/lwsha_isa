@@ -2,9 +2,9 @@
 
 March 11, 2020  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 
-##	Description
+##	Description and Goal
 
-[RISC-V](https://riscv.org/) design exploration for the primary hash
+[RISC-V](https://riscv.org/) design exploration for the current primary hash
 function standards:
 
 *	**SHA-3**: 
@@ -16,7 +16,7 @@ function standards:
 	algorithms SHA-224, SHA-256, SHA-384, and SHA-512.
 	These older functions are denoted as SHA2-xxx to avoid confusion.
 
-Currently this repository contains "runnable pseudocode" implementations
+Presently this repository contains "runnable pseudocode" implementations
 and unit tests for all. Running `make` followed by `./xtest` should execute
 those tests on most Linux type PCs without any special hardware or software.
 
