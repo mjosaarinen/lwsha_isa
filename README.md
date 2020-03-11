@@ -22,10 +22,10 @@ those tests on most Linux type PCs without any special hardware or software
 (you may have to adjust `Makefile`).
 
 The main purpose of this work is to facilitate quantitative analysis and 
-instruction counts for the hash function core parts which are the Keccak-p 
-permutation for SHA-3 and the two SHA-2 compression functions (one for 
-SHA2-225/256 and another for SHA2-384/512). Some preliminary investigations 
-have also been made with the Chinese SM3 standard hash.
+(essentially instruction counts). We focus on the core iterations parts: the
+Keccak-p permutation for SHA-3 and the two SHA-2 compression functions 
+(one for SHA2-225/256 and another for SHA2-384/512). Some preliminary
+investigations have also been made with the Chinese SM3 standard hash.
 
 This work is related to the following RISC-V Extension profiles which
 are also works in progress.
@@ -36,8 +36,8 @@ are also works in progress.
 *	**Bitmanip**:
 	[RISC-V Bitmanip (Bit Manipulation) Extension](https://github.com/riscv/riscv-bitmanip). Draft version of January 29, 2020.
 
-We are essentially complementing the analysis done in the crypto extension
-with somewhat different algorithm implementation techniques.
+This work complements the analysis done in the crypto extension with somewhat
+different algorithm implementation techniques.
 
 As is being done with ["lwaes_isa"](https://github.com/mjosaarinen/lwaes_isa) 
 for AES-128/192/256 and SM4 block ciphers, we hope to extend this eventually
