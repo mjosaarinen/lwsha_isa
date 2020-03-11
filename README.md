@@ -98,7 +98,7 @@ selected so that we may have RS1=RD to save opcode space, as can be done with
 lightweight AES. They are composed of three shifts/rotations, two XORs, 
 and one addition each.
 
-Their emulation functions are in respective compression funciton 
+Their emulation functions are in respective compression function 
 implementation files. For example for SHA-256 we have:
 ```C
 uint32_t sha256_sum0(uint32_t rs1, uint32_t rs2)
@@ -138,9 +138,9 @@ SHA2-224/256 has 48 × K steps and 64 × R steps while SHA2-384/512 has
 64 × K steps and 80 × R steps (their structure is equivalent on both,
 although data path size differs 32/64-bit).
 
-Hence we have the following core instruction mix:
+Hence we have the following core loop instruction mix:
 
-| Insn		|	K 	|	R	| SHA2-224/256 	| SHA2-384/512	|
+| 			|	K 	|	R	| SHA2-224/256 	| SHA2-384/512	|
 |----------:|------:|------:|--------------:|--------------:|
 | ADD		|	1	|	5	|	368			|	464			|
 | AND		|	0	|	3	|	192			|	240			|
@@ -150,8 +150,9 @@ Hence we have the following core instruction mix:
 | **Total**	|	3	|	13	|	**976**		|	**1232**	|
 
 Each SHAx instruction would decompose into 6-12 base instructions (even with
-rotate), so this is a significant speedup (3 × faster or more). The ADD fused
-is just an opportunistic 20% performance impact over the current spec.
+rotate), so this is a significant speedup (3 × faster or more). The ADD 
+fused here is just an opportunistic 20% performance improvement over the
+current spec.
 
 SHA2-384/512 on RV32 is not tackled yet; implementing its entirely 
 64-bit data paths on RV32 is challenging. The large number of 64-bit additions
