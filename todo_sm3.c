@@ -2,9 +2,12 @@
 //	2020-03-10	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-//	XXX this is work in progress
+//	The Chinese Standard SM3 Hash Function
+//	GB/T 32905-2016, GM/T 0004-2012, ISO/IEC 10118-3:2018
 
+//	XXX this is work in progress;
 //	currently compression function, padding, and test in the same file.
+
 #include "test_hex.h"
 
 //	bitmanip (emulation) prototypes here
