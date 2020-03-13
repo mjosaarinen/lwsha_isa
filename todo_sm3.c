@@ -1,4 +1,4 @@
-//	misc_sm3.c
+//	todo_sm3.c
 //	2020-03-10	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 

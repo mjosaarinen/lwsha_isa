@@ -16,8 +16,6 @@ int main(int argc, char **argv)
 {
 	int fail = 0;
 
-	return test_sm3();
-
 	fail += test_sha2_all();
 	fail += test_sha3_all();
 //	fail += test_sm3();
