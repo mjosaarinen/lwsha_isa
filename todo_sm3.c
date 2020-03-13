@@ -2,105 +2,147 @@
 //	2020-03-10	Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //	Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-//	SM3 compression function
+//	XXX this is work in progress
 
-//	XXX this is just a placeholder XXX
-
-#include <stdio.h>
-#include <string.h>
+//	currently compression function, padding, and test in the same file.
+#include "test_hex.h"
 
 //	bitmanip (emulation) prototypes here
 #include "bitmanip.h"
 
-//	nonlinear functions
-#define CH(x, y, z) ((x & y) ^ rv_andn(z, x))
-#define MAJ(x, y, z) (((z | x) & y) | (z & x))
+//	key expansion
 
-//	round constants
-//	tj[i] = rv_ror(0x79CC4519, (-i) & 0x1F);	//	for i =	 0..15
-//	tj[i] = rv_ror(0x7A879D8A, (-i) & 0x1F);	//	for i = 16..63
+#define SM3KEY(w0, w3, w7, wa, wd) {				\
+	t = w0 ^ w7 ^ rv_ror(wd, 17);					\
+	t = t ^ rv_ror(t,  9) ^ rv_ror(t, 17) ;			\
+	w0 = wa ^ rv_ror(w3, 25) ^ t;					}
 
-const uint32_t sm3_tj[64] = {
-	0x79CC4519, 0xF3988A32, 0xE7311465, 0xCE6228CB,
-	0x9CC45197, 0x3988A32F, 0x7311465E, 0xE6228CBC,
-	0xCC451979, 0x988A32F3, 0x311465E7, 0x6228CBCE,
-	0xC451979C, 0x88A32F39, 0x11465E73, 0x228CBCE6,
-	0x9D8A7A87, 0x3B14F50F, 0x7629EA1E, 0xEC53D43C,
-	0xD8A7A879, 0xB14F50F3, 0x629EA1E7, 0xC53D43CE,
-	0x8A7A879D, 0x14F50F3B, 0x29EA1E76, 0x53D43CEC,
-	0xA7A879D8, 0x4F50F3B1, 0x9EA1E762, 0x3D43CEC5,
-	0x7A879D8A, 0xF50F3B14, 0xEA1E7629, 0xD43CEC53,
-	0xA879D8A7, 0x50F3B14F, 0xA1E7629E, 0x43CEC53D,
-	0x879D8A7A, 0x0F3B14F5, 0x1E7629EA, 0x3CEC53D4,
-	0x79D8A7A8, 0xF3B14F50, 0xE7629EA1, 0xCEC53D43,
-	0x9D8A7A87, 0x3B14F50F, 0x7629EA1E, 0xEC53D43C,
-	0xD8A7A879, 0xB14F50F3, 0x629EA1E7, 0xC53D43CE,
-	0x8A7A879D, 0x14F50F3B, 0x29EA1E76, 0x53D43CEC,
-	0xA7A879D8, 0x4F50F3B1, 0x9EA1E762, 0x3D43CEC5
-};
+//	rounds 0..15
+
+#define SM3RF0(a, b, c, d, e, f, g, h, w0, w4) {	\
+	h = h + w0;										\
+	t = rv_ror(a, 20);								\
+	u = t + e + tj;									\
+	u = rv_ror(u, 25);								\
+	t = t ^ u;										\
+	d = d + t + (a ^ b ^ c);						\
+	b = rv_ror(b, 23);								\
+	h = h + u + (e ^ f ^ g);						\
+	h = h ^ rv_ror(h, 23) ^ rv_ror(h, 15);			\
+	f = rv_ror(f, 13);								\
+	d = d + (w0 ^ w4);								\
+	tj = rv_ror(tj, 31);							}
+
+//	rounds 16..63
+
+#define SM3RF1(a, b, c, d, e, f, g, h, w0, w4) {	\
+	h = h + w0;										\
+	t = rv_ror(a, 20);								\
+	u = t + e + tj;									\
+	u = rv_ror(u, 25);								\
+	t = t ^ u;										\
+	d = d + t + (((a | c) & b) | (a & c));			\
+	b = rv_ror(b, 23);								\
+	h = h + u + ((e & f) ^ rv_andn(g, e));			\
+	h = h ^ rv_ror(h, 23) ^ rv_ror(h, 15);			\
+	f = rv_ror(f, 13);								\
+	d = d + (w0 ^ w4);								\
+	tj = rv_ror(tj, 31);							}
+
 
 //	compression function (this one does *not* modify m[16])
 
-void rv32_sm3_compress(uint32_t *s, uint32_t *m)
+void sm3_compress(uint32_t *s, uint32_t *m)
 {
 	int i;
 	uint32_t	a, b, c, d, e, f, g, h;
-
-	uint32_t	w[68];
-	uint32_t	t, u;
+	uint32_t	m0, m1, m2, m3, m4, m5, m6, m7,
+				m8, m9, ma, mb, mc, md, me, mf;
+	uint32_t	tj, t, u;
 
 	a = s[0];	b = s[1];	c = s[2];	d = s[3];
 	e = s[4];	f = s[5];	g = s[6];	h = s[7];
 
-	//	load with rev8.w
-	for (i = 0; i < 16; i++) {
-		w[i] = m[i];	//rv_grev(m[i], 0x18);
-	}
+	//		load with rev8.w
 
-	//	linear schedule
+	m0 = rv_grev(m[ 0], 0x18);		m1 = rv_grev(m[ 1], 0x18);
+	m2 = rv_grev(m[ 2], 0x18);		m3 = rv_grev(m[ 3], 0x18);
+	m4 = rv_grev(m[ 4], 0x18);		m5 = rv_grev(m[ 5], 0x18);
+	m6 = rv_grev(m[ 6], 0x18);		m7 = rv_grev(m[ 7], 0x18);
+	m8 = rv_grev(m[ 8], 0x18);		m9 = rv_grev(m[ 9], 0x18);
+	ma = rv_grev(m[10], 0x18);		mb = rv_grev(m[11], 0x18);
+	mc = rv_grev(m[12], 0x18);		md = rv_grev(m[13], 0x18);
+	me = rv_grev(m[14], 0x18);		mf = rv_grev(m[15], 0x18);
 
-	for (i = 16; i < 68; i++) {
-		t = w[i - 16] ^ w[i - 9] ^ rv_ror(w[i - 3], 17);
-		t = t ^ rv_ror(t,  9) ^ rv_ror(t, 17) ;
-		w[i] = w[i - 6] ^ rv_ror(w[i - 13], 25) ^ t;
-	}
+	tj = 0x79CC4519;
 
-	#define SM3R0(a, b, c, d, e, f, g, h, i) {	\
-		t = rv_ror(a, 20);						\
-		u = t + e + sm3_tj[i];					\
-		u = rv_ror(u, 25);						\
-		t = t ^ u;								\
-		d = d + t + (a ^ b ^ c);				\
-		b = rv_ror(b, 23);						\
-		h = h + u + (e ^ f ^ g) + w[i];			\
-		h = h ^ rv_ror(h, 23) ^ rv_ror(h, 15);	\
-		f = rv_ror(f, 13);						\
-		d += w[i] ^ w[i + 4];			}
+	SM3RF0( a, b, c, d, e, f, g, h, m0, m4);
+	SM3RF0( d, a, b, c, h, e, f, g, m1, m5);
+	SM3RF0( c, d, a, b, g, h, e, f, m2, m6);
+	SM3RF0( b, c, d, a, f, g, h, e, m3, m7);
 
+	SM3RF0( a, b, c, d, e, f, g, h, m4, m8);
+	SM3RF0( d, a, b, c, h, e, f, g, m5, m9);
+	SM3RF0( c, d, a, b, g, h, e, f, m6, ma);
+	SM3RF0( b, c, d, a, f, g, h, e, m7, mb);
 
-	for (i = 0; i < 16; i += 4) {
-		SM3R0( a, b, c, d, e, f, g, h, i );
-		SM3R0( d, a, b, c, h, e, f, g, i + 1 );
-		SM3R0( c, d, a, b, g, h, e, f, i + 2 );
-		SM3R0( b, c, d, a, f, g, h, e, i + 3 );
-	}
+	SM3RF0( a, b, c, d, e, f, g, h, m8, mc);
+	SM3RF0( d, a, b, c, h, e, f, g, m9, md);
+	SM3RF0( c, d, a, b, g, h, e, f, ma, me);
+	SM3RF0( b, c, d, a, f, g, h, e, mb, mf);
 
-	#define SM3R1(a, b, c, d, e, f, g, h, i) {	\
-		t = rv_ror(a, 20);						\
-		u = t + e + sm3_tj[i];					\
-		u = rv_ror(u, 25);						\
-		t = (t ^ u) + (w[i] ^ w[i + 4]);		\
-		d = d + t + MAJ(a, b, c);				\
-		b = rv_ror(b, 23);						\
-		h = h + u + CH(e, f, g) + w[i];			\
-		h = h ^ rv_ror(h, 23) ^ rv_ror(h, 15);	\
-		f = rv_ror(f, 13);						}
+	SM3KEY( m0, m3, m7, ma, md );
+	SM3KEY( m1, m4, m8, mb, me );
+	SM3KEY( m2, m5, m9, mc, mf );
+	SM3KEY( m3, m6, ma, md, m0 );
 
-	for (i = 16; i < 64; i += 4) {
-		SM3R1( a, b, c, d, e, f, g, h, i );
-		SM3R1( d, a, b, c, h, e, f, g, i + 1 );
-		SM3R1( c, d, a, b, g, h, e, f, i + 2 );
-		SM3R1( b, c, d, a, f, g, h, e, i + 3 );
+	SM3RF0( a, b, c, d, e, f, g, h, mc, m0);
+	SM3RF0( d, a, b, c, h, e, f, g, md, m1);
+	SM3RF0( c, d, a, b, g, h, e, f, me, m2);
+	SM3RF0( b, c, d, a, f, g, h, e, mf, m3);
+
+	tj = 0x9D8A7A87;
+
+	for (i = 0; i < 3; i++) {
+
+		SM3KEY( m4, m7, mb, me, m1 );
+		SM3KEY( m5, m8, mc, mf, m2 );
+		SM3KEY( m6, m9, md, m0, m3 );
+		SM3KEY( m7, ma, me, m1, m4 );
+		SM3KEY( m8, mb, mf, m2, m5 );
+		SM3KEY( m9, mc, m0, m3, m6 );
+		SM3KEY( ma, md, m1, m4, m7 );
+		SM3KEY( mb, me, m2, m5, m8 );
+		SM3KEY( mc, mf, m3, m6, m9 );
+		SM3KEY( md, m0, m4, m7, ma );
+		SM3KEY( me, m1, m5, m8, mb );
+		SM3KEY( mf, m2, m6, m9, mc );
+
+		SM3RF1( a, b, c, d, e, f, g, h, m0, m4);
+		SM3RF1( d, a, b, c, h, e, f, g, m1, m5);
+		SM3RF1( c, d, a, b, g, h, e, f, m2, m6);
+		SM3RF1( b, c, d, a, f, g, h, e, m3, m7);
+
+		SM3RF1( a, b, c, d, e, f, g, h, m4, m8);
+		SM3RF1( d, a, b, c, h, e, f, g, m5, m9);
+		SM3RF1( c, d, a, b, g, h, e, f, m6, ma);
+		SM3RF1( b, c, d, a, f, g, h, e, m7, mb);
+
+		SM3RF1( a, b, c, d, e, f, g, h, m8, mc);
+		SM3RF1( d, a, b, c, h, e, f, g, m9, md);
+		SM3RF1( c, d, a, b, g, h, e, f, ma, me);
+		SM3RF1( b, c, d, a, f, g, h, e, mb, mf);
+
+		SM3KEY( m0, m3, m7, ma, md );
+		SM3KEY( m1, m4, m8, mb, me );
+		SM3KEY( m2, m5, m9, mc, mf );
+		SM3KEY( m3, m6, ma, md, m0 );
+
+		SM3RF1( a, b, c, d, e, f, g, h, mc, m0);
+		SM3RF1( d, a, b, c, h, e, f, g, md, m1);
+		SM3RF1( c, d, a, b, g, h, e, f, me, m2);
+		SM3RF1( b, c, d, a, f, g, h, e, mf, m3);
+
 	}
 
 	s[0] = s[0] ^ a;	s[1] = s[1] ^ b;
@@ -109,35 +151,79 @@ void rv32_sm3_compress(uint32_t *s, uint32_t *m)
 	s[6] = s[6] ^ g;	s[7] = s[7] ^ h;
 }
 
-//	simplified test with "abc" test vector from the standard
 
-int test_sm3()
+//	Compute 32-byte message digest to "md" from "in" which has "inlen" bytes
+
+void sm3_256(uint8_t *md, const void *in, size_t inlen)
 {
-	const uint32_t tv[16] =	 {
-		0x66C7F0F4, 0x62EEEDD9, 0xD1F2D46B, 0xDC10E4E2,
-		0x4167C487, 0x5CF2F7A2, 0x297DA02B, 0x8F4BA8E0
-	};
-	uint32_t s[8], m[16];
-	int i, fail = 0;
+	union {									//	aligned:
+		uint8_t b[64];						//	8-bit bytes
+		uint32_t w[16];						//	32-bit words
+	} m;
+	size_t i;
+	uint64_t x;
+	uint32_t t, s[8];
 
+	const uint8_t *p = in;
+
+	//	initial values
 	s[0] = 0x7380166F;	s[1] = 0x4914B2B9;
 	s[2] = 0x172442D7;	s[3] = 0xDA8A0600;
 	s[4] = 0xA96F30BC;	s[5] = 0x163138AA;
 	s[6] = 0xE38DEE4D;	s[7] = 0xB0FB0E4E;
 
-	//	"abc" with padding, converted to little endian here
-	memset(m, 0, sizeof(m));
-	m[ 0] = 0x61626380;
-	m[15] = 0x00000018;
+	//	"md padding"
+	x = inlen << 3;							//	length in bits
 
-	rv32_sm3_compress(s, m);
-
-	for (i = 0; i < 8; i++) {
-		printf("%08X ", s[i]);
-		if (tv[i] != s[i])
-			fail++;
+	while (inlen >= 64) {					//	full blocks
+		memcpy(m.b, p, 64);
+		sm3_compress(s, m.w);
+		inlen -= 64;
+		p += 64;
 	}
-	printf("fail=%d\n", fail);
+	memcpy(m.b, p, inlen);					//	last data block
+	m.b[inlen++] = 0x80;
+	if (inlen > 56) {
+		memset(&m.b[inlen], 0x00, 64 - inlen);
+		sm3_compress(s, m.w);
+		inlen = 0;
+	}
+	i = 64;									//	process length
+	while (x > 0) {
+		m.b[--i] = x & 0xFF;
+		x >>= 8;
+	}
+	memset(&m.b[inlen], 0x00, i - inlen);
+	sm3_compress(s, m.w);
+
+	//	store big endian output
+	for (i = 0; i < 32; i += 4) {
+		t = s[i >> 2];
+		md[i] = t >> 24;
+		md[i + 1] = (t >> 16) & 0xFF;
+		md[i + 2] = (t >> 8) & 0xFF;
+		md[i + 3] = t & 0xFF;
+	}
+}
+
+//	=== TESTS ===
+
+//	simplified test with "abc" test vector from the standard
+
+int test_sm3()
+{
+	uint8_t md[32], in[256];
+	int fail = 0;
+
+	sm3_256(md, "abc", 3);
+	fail += chkhex("SM3-256", md, 32,
+		"66C7F0F462EEEDD9D1F2D46BDC10E4E24167C4875CF2F7A2297DA02B8F4BA8E0");
+
+	sm3_256(md, in, readhex(in, sizeof(in),
+		"6162636461626364616263646162636461626364616263646162636461626364"
+		"6162636461626364616263646162636461626364616263646162636461626364"));
+	fail += chkhex("SM3-256", md, 32,
+		"DEBE9FF92275B8A138604889C18E5A4D6FDB70E5387E5765293DCBA39C0C5732");
 
 	return fail;
 }

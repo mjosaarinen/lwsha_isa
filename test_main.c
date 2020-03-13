@@ -8,7 +8,7 @@
 
 int test_sha2_all();			//	test_sha2.c
 int test_sha3_all();			//	test_sha3.c
-int test_sm3();
+int test_sm3();					//	todo_sm3.c
 
 //	stub main
 
@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 
 	fail += test_sha2_all();
 	fail += test_sha3_all();
-//	fail += test_sm3();
+	fail += test_sm3();
 
 	printf("[%s] === finished with %d unit test failures ===\n",
 		fail == 0 ? "PASS" : "FAIL", fail);
