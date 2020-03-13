@@ -60,23 +60,23 @@ void rv32_sm3_compress(uint32_t *s, uint32_t *m)
 	//	linear schedule
 
 	for (i = 16; i < 68; i++) {
-
 		t = w[i - 16] ^ w[i - 9] ^ rv_ror(w[i - 3], 17);
-		w[i] = t ^ rv_ror(t, 17) ^ rv_ror(t,  9)
-				^ w[i - 6] ^ rv_ror(w[i - 13], 25);
+		t = t ^ rv_ror(t,  9) ^ rv_ror(t, 17) ;
+		w[i] = w[i - 6] ^ rv_ror(w[i - 13], 25) ^ t;
 	}
-
 
 	#define SM3R0(a, b, c, d, e, f, g, h, i) {	\
 		t = rv_ror(a, 20);						\
 		u = t + e + sm3_tj[i];					\
 		u = rv_ror(u, 25);						\
-		t = (t ^ u) + (w[i] ^ w[i + 4]);		\
+		t = t ^ u;								\
 		d = d + t + (a ^ b ^ c);				\
 		b = rv_ror(b, 23);						\
 		h = h + u + (e ^ f ^ g) + w[i];			\
 		h = h ^ rv_ror(h, 23) ^ rv_ror(h, 15);	\
-		f = rv_ror(f, 13);						}
+		f = rv_ror(f, 13);						\
+		d += w[i] ^ w[i + 4];			}
+
 
 	for (i = 0; i < 16; i += 4) {
 		SM3R0( a, b, c, d, e, f, g, h, i );
