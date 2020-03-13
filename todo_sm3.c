@@ -6,14 +6,14 @@
 //	GB/T 32905-2016, GM/T 0004-2012, ISO/IEC 10118-3:2018
 
 //	XXX this is work in progress;
-//	currently compression function, padding, and test in the same file.
+//	currently compression function, padding, and test are in the same file.
 
 #include "test_hex.h"
 
 //	bitmanip (emulation) prototypes here
 #include "bitmanip.h"
 
-//	key expansion
+//	key schedule
 
 #define SM3KEY(w0, w3, w7, wa, wd) {				\
 	t = w0 ^ w7 ^ rv_ror(wd, 17);					\
@@ -27,8 +27,7 @@
 	t = rv_ror(a, 20);								\
 	u = t + e + tj;									\
 	u = rv_ror(u, 25);								\
-	t = t ^ u;										\
-	d = d + t + (a ^ b ^ c);						\
+	d = d + (t ^ u) + (a ^ b ^ c);					\
 	b = rv_ror(b, 23);								\
 	h = h + u + (e ^ f ^ g);						\
 	h = h ^ rv_ror(h, 23) ^ rv_ror(h, 15);			\
@@ -43,8 +42,7 @@
 	t = rv_ror(a, 20);								\
 	u = t + e + tj;									\
 	u = rv_ror(u, 25);								\
-	t = t ^ u;										\
-	d = d + t + (((a | c) & b) | (a & c));			\
+	d = d + (t ^ u) + (((a | c) & b) | (a & c));	\
 	b = rv_ror(b, 23);								\
 	h = h + u + ((e & f) ^ rv_andn(g, e));			\
 	h = h ^ rv_ror(h, 23) ^ rv_ror(h, 15);			\
@@ -66,43 +64,43 @@ void sm3_compress(uint32_t *s, uint32_t *m)
 	a = s[0];	b = s[1];	c = s[2];	d = s[3];
 	e = s[4];	f = s[5];	g = s[6];	h = s[7];
 
-	//		load with rev8.w
+	//	load with rev8.w
 
-	m0 = rv_grev(m[ 0], 0x18);		m1 = rv_grev(m[ 1], 0x18);
-	m2 = rv_grev(m[ 2], 0x18);		m3 = rv_grev(m[ 3], 0x18);
-	m4 = rv_grev(m[ 4], 0x18);		m5 = rv_grev(m[ 5], 0x18);
-	m6 = rv_grev(m[ 6], 0x18);		m7 = rv_grev(m[ 7], 0x18);
-	m8 = rv_grev(m[ 8], 0x18);		m9 = rv_grev(m[ 9], 0x18);
-	ma = rv_grev(m[10], 0x18);		mb = rv_grev(m[11], 0x18);
-	mc = rv_grev(m[12], 0x18);		md = rv_grev(m[13], 0x18);
-	me = rv_grev(m[14], 0x18);		mf = rv_grev(m[15], 0x18);
+	m0 = rv_grev(m[ 0], 0x18);	m1 = rv_grev(m[ 1], 0x18);
+	m2 = rv_grev(m[ 2], 0x18);	m3 = rv_grev(m[ 3], 0x18);
+	m4 = rv_grev(m[ 4], 0x18);	m5 = rv_grev(m[ 5], 0x18);
+	m6 = rv_grev(m[ 6], 0x18);	m7 = rv_grev(m[ 7], 0x18);
+	m8 = rv_grev(m[ 8], 0x18);	m9 = rv_grev(m[ 9], 0x18);
+	ma = rv_grev(m[10], 0x18);	mb = rv_grev(m[11], 0x18);
+	mc = rv_grev(m[12], 0x18);	md = rv_grev(m[13], 0x18);
+	me = rv_grev(m[14], 0x18);	mf = rv_grev(m[15], 0x18);
 
 	tj = 0x79CC4519;
 
-	SM3RF0( a, b, c, d, e, f, g, h, m0, m4);
-	SM3RF0( d, a, b, c, h, e, f, g, m1, m5);
-	SM3RF0( c, d, a, b, g, h, e, f, m2, m6);
-	SM3RF0( b, c, d, a, f, g, h, e, m3, m7);
+	SM3RF0( a, b, c, d, e, f, g, h, m0, m4 );
+	SM3RF0( d, a, b, c, h, e, f, g, m1, m5 );
+	SM3RF0( c, d, a, b, g, h, e, f, m2, m6 );
+	SM3RF0( b, c, d, a, f, g, h, e, m3, m7 );
 
-	SM3RF0( a, b, c, d, e, f, g, h, m4, m8);
-	SM3RF0( d, a, b, c, h, e, f, g, m5, m9);
-	SM3RF0( c, d, a, b, g, h, e, f, m6, ma);
-	SM3RF0( b, c, d, a, f, g, h, e, m7, mb);
+	SM3RF0( a, b, c, d, e, f, g, h, m4, m8 );
+	SM3RF0( d, a, b, c, h, e, f, g, m5, m9 );
+	SM3RF0( c, d, a, b, g, h, e, f, m6, ma );
+	SM3RF0( b, c, d, a, f, g, h, e, m7, mb );
 
-	SM3RF0( a, b, c, d, e, f, g, h, m8, mc);
-	SM3RF0( d, a, b, c, h, e, f, g, m9, md);
-	SM3RF0( c, d, a, b, g, h, e, f, ma, me);
-	SM3RF0( b, c, d, a, f, g, h, e, mb, mf);
+	SM3RF0( a, b, c, d, e, f, g, h, m8, mc );
+	SM3RF0( d, a, b, c, h, e, f, g, m9, md );
+	SM3RF0( c, d, a, b, g, h, e, f, ma, me );
+	SM3RF0( b, c, d, a, f, g, h, e, mb, mf );
 
 	SM3KEY( m0, m3, m7, ma, md );
 	SM3KEY( m1, m4, m8, mb, me );
 	SM3KEY( m2, m5, m9, mc, mf );
 	SM3KEY( m3, m6, ma, md, m0 );
 
-	SM3RF0( a, b, c, d, e, f, g, h, mc, m0);
-	SM3RF0( d, a, b, c, h, e, f, g, md, m1);
-	SM3RF0( c, d, a, b, g, h, e, f, me, m2);
-	SM3RF0( b, c, d, a, f, g, h, e, mf, m3);
+	SM3RF0( a, b, c, d, e, f, g, h, mc, m0 );
+	SM3RF0( d, a, b, c, h, e, f, g, md, m1 );
+	SM3RF0( c, d, a, b, g, h, e, f, me, m2 );
+	SM3RF0( b, c, d, a, f, g, h, e, mf, m3 );
 
 	tj = 0x9D8A7A87;
 
@@ -121,30 +119,30 @@ void sm3_compress(uint32_t *s, uint32_t *m)
 		SM3KEY( me, m1, m5, m8, mb );
 		SM3KEY( mf, m2, m6, m9, mc );
 
-		SM3RF1( a, b, c, d, e, f, g, h, m0, m4);
-		SM3RF1( d, a, b, c, h, e, f, g, m1, m5);
-		SM3RF1( c, d, a, b, g, h, e, f, m2, m6);
-		SM3RF1( b, c, d, a, f, g, h, e, m3, m7);
+		SM3RF1( a, b, c, d, e, f, g, h, m0, m4 );
+		SM3RF1( d, a, b, c, h, e, f, g, m1, m5 );
+		SM3RF1( c, d, a, b, g, h, e, f, m2, m6 );
+		SM3RF1( b, c, d, a, f, g, h, e, m3, m7 );
 
-		SM3RF1( a, b, c, d, e, f, g, h, m4, m8);
-		SM3RF1( d, a, b, c, h, e, f, g, m5, m9);
-		SM3RF1( c, d, a, b, g, h, e, f, m6, ma);
-		SM3RF1( b, c, d, a, f, g, h, e, m7, mb);
+		SM3RF1( a, b, c, d, e, f, g, h, m4, m8 );
+		SM3RF1( d, a, b, c, h, e, f, g, m5, m9 );
+		SM3RF1( c, d, a, b, g, h, e, f, m6, ma );
+		SM3RF1( b, c, d, a, f, g, h, e, m7, mb );
 
-		SM3RF1( a, b, c, d, e, f, g, h, m8, mc);
-		SM3RF1( d, a, b, c, h, e, f, g, m9, md);
-		SM3RF1( c, d, a, b, g, h, e, f, ma, me);
-		SM3RF1( b, c, d, a, f, g, h, e, mb, mf);
+		SM3RF1( a, b, c, d, e, f, g, h, m8, mc );
+		SM3RF1( d, a, b, c, h, e, f, g, m9, md );
+		SM3RF1( c, d, a, b, g, h, e, f, ma, me );
+		SM3RF1( b, c, d, a, f, g, h, e, mb, mf );
 
 		SM3KEY( m0, m3, m7, ma, md );
 		SM3KEY( m1, m4, m8, mb, me );
 		SM3KEY( m2, m5, m9, mc, mf );
 		SM3KEY( m3, m6, ma, md, m0 );
 
-		SM3RF1( a, b, c, d, e, f, g, h, mc, m0);
-		SM3RF1( d, a, b, c, h, e, f, g, md, m1);
-		SM3RF1( c, d, a, b, g, h, e, f, me, m2);
-		SM3RF1( b, c, d, a, f, g, h, e, mf, m3);
+		SM3RF1( a, b, c, d, e, f, g, h, mc, m0 );
+		SM3RF1( d, a, b, c, h, e, f, g, md, m1 );
+		SM3RF1( c, d, a, b, g, h, e, f, me, m2 );
+		SM3RF1( b, c, d, a, f, g, h, e, mf, m3 );
 
 	}
 
