@@ -8,7 +8,7 @@
 
 int test_sha2_all();			//	test_sha2.c
 int test_sha3_all();			//	test_sha3.c
-int test_sm3();					//	todo_sm3.c
+int test_sm3();					//	temp_sm3.c
 
 //	stub main
 

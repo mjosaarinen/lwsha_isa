@@ -51,7 +51,7 @@ uint32_t sha256_sig1(uint32_t rs1, uint32_t rs2)
 //	keying step, sets x0 as a function of 4 inputs
 #define SHA256K(x0, x1, x9, xe) {	\
 	x0 = x0 + x9;					\
-	x0 = sha256_sig0(x0, x1) ;		\
+	x0 = sha256_sig0(x0, x1);		\
 	x0 = sha256_sig1(x0, xe);		}
 
 //	compression function (this one does *not* modify m[16])
