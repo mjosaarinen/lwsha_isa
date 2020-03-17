@@ -90,7 +90,7 @@ wrappers and is used by the unit tests in [test_sha2.c](test_sha2.c).
 These instructions implement the "sigma functions" defined in Sections 
 4.1.2 and 4.1.3 of FIPS 180-4. By convention, I'll write the upper case
 sigma letter Σ as "sum" and lower case σ as "sig".
-This naming convention is arbitrary and I'll change it later.
+This naming convention is arbitrary and may change later.
 
 We currently diverge from the specification somewhat as we expand them into
 two-input functions that also perform an ADD operation. The operands are
