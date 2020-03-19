@@ -160,6 +160,44 @@ will result in a lot of SLTUs because RISC-V has no carry. Those additions
 also make the interleaving technique used for SHA-3 unusable and therefore
 there may be a need for funnel shifts.
 
+##	SM3
+
+The file [temp_sm3.c](temp_sm3.c) contains our initial exploration of the 
+Chinese Hash function [SM3](doc/sm3-ch.pdf) [english](doc/sm3-en.pdf) 
+(GB/T 32905-2016, GM/T 0004-2012, ISO/IEC 10118-3:2018). Currently we
+can not recommend any specific lightweight instructions that would be
+particularly helpful for it.
+
+Observations:
+
+*	The external structure of SM3 is very similar to SHA-256; It is possible
+	to perform the entire compression function iteration without stack
+	loads and stores here as well.
+*	Gains from RORI are very high as the algorithm is highly dependent
+	on rotations.
+*	The message expansion LFSR is much denser than that of SHA-256, which is
+	the main factor increasing the overall instruction count.
+*	A straight-forward implementation does not have timing issues.
+
+Using a subset of bitmanip we observe from [temp_sm3.c](temp_sm3.c):
+Key steps K have 4 × RORI, 6 × XOR = 10 (completely linear). 
+Round 0..15 step R0 has 8 × ADD, 7 × RORI , 8 × XOR = 23 (it's entirely ARX!)
+Round 16..64 step R1 has 8 × ADD, 7 × RORI, 5 × XOR, 3 × AND, 2 × OR, 1 × ANDN = 26
+
+There are 52 K steps, 16 R0 steps, and 48 R1 steps, so 2136 total for the compression function sans looping and input/output loads.
+
+The best single instruction I could come up with was a special instruction 
+related to P1 permutation that would combine 3 RORIs and 3 XORs in K step:
+```C
+uint32_t sm3p1(uint32_t rs1, uint32_t rs2) 
+{
+	return rs1 ^ rv_ror(rs1,  9) ^ rv_ror(rs1, 17) ^ rv_ror(rs2, 25);
+}
+```
+would save 208 instructions only (roughly 10%). Even with multiple such
+things (one for P0 etc) the gains are under 50%.
+
+####
 
 ####	Disclaimer and Status
 
