@@ -194,7 +194,7 @@ related to P1 permutation that would combine 3 RORIs and 3 XORs in K step:
 ```C
 uint32_t sm3p1(uint32_t rs1, uint32_t rs2) 
 {
-	return rs1 ^ rv_ror(rs1,  9) ^ rv_ror(rs1, 17) ^ rv_ror(rs2, 25);
+    return rs1 ^ rv_ror(rs1,  9) ^ rv_ror(rs1, 17) ^ rv_ror(rs2, 25);
 }
 ```
 would save 208 instructions only (roughly 10%). Even with multiple such
