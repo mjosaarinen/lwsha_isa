@@ -202,7 +202,7 @@ things (one for P0 etc) the gains are under 50%.
 
 ####
 
-####	Disclaimer and Status
+**Disclaimer and Status**
 
 *   [PQShield](https://pqshield.com) offers no warranty or specific claims of
     standards compliance nor does not endorse this proposal above other
