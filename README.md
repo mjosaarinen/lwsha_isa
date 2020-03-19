@@ -122,8 +122,7 @@ uint32_t sha256_sig1(uint32_t rs1, uint32_t rs2)
 }
 ```
 
-*Note:* Based on feedback, I will probably replace these with single-input
-variants soon (i.e. dropping that addition and using rs2 as the only source).
+**Note:** *Based on feedback, I will probably replace these with single-input variants soon (i.e. dropping that addition with rs1).*
 
 
 We have:
