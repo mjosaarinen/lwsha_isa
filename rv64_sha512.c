@@ -1,64 +1,64 @@
-//	rv64_sha512.c
-//	2020-03-08	Markku-Juhani O. Saarinen <mjos@pqshield.com>
-//	Copyright (c) 2020, PQShield Ltd. All rights reserved.
+//  rv64_sha512.c
+//  2020-03-08  Markku-Juhani O. Saarinen <mjos@pqshield.com>
+//  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-//	FIPS 180-4 SHA2-384/512 compression function for RV64
+//  FIPS 180-4 SHA2-384/512 compression function for RV64
 
 #include "sha2.h"
 
-//	bitmanip (emulation) prototypes here
+//  bitmanip (emulation) prototypes here
 #include "bitmanip.h"
 
-//	4.1.3 SHA-384, SHA-512, SHA-512/224 and SHA-512/256 Functions
-//	these four are intended as ISA extensions
+//  4.1.3 SHA-384, SHA-512, SHA-512/224 and SHA-512/256 Functions
+//  these four are intended as ISA extensions
 
-//	upper case sigma0, sigma1 is "sum"
+//  upper case sigma0, sigma1 is "sum"
 
 uint64_t sha512_sum0(uint64_t rs1, uint64_t rs2)
 {
-	return rs1 + (rv_rorw(rs2, 28) ^ rv_rorw(rs2, 34) ^ rv_rorw(rs2, 39));
+	return rs1 + (rvb_rorw(rs2, 28) ^ rvb_rorw(rs2, 34) ^ rvb_rorw(rs2, 39));
 }
 
 uint64_t sha512_sum1(uint64_t rs1, uint64_t rs2)
 {
-	return rs1 + (rv_rorw(rs2, 14) ^ rv_rorw(rs2, 18) ^ rv_rorw(rs2, 41));
+	return rs1 + (rvb_rorw(rs2, 14) ^ rvb_rorw(rs2, 18) ^ rvb_rorw(rs2, 41));
 }
 
-//	lower case sigma0, sigma1 is "sig"
+//  lower case sigma0, sigma1 is "sig"
 
 uint64_t sha512_sig0(uint64_t rs1, uint64_t rs2)
 {
-	return rs1 + (rv_rorw(rs2,	1) ^ rv_rorw(rs2,  8) ^ (rs2 >> 7));
+	return rs1 + (rvb_rorw(rs2, 1) ^ rvb_rorw(rs2, 8) ^ (rs2 >> 7));
 }
 
 uint64_t sha512_sig1(uint64_t rs1, uint64_t rs2)
 {
-	return rs1 + (rv_rorw(rs2, 19) ^ rv_rorw(rs2, 61) ^ (rs2 >> 6));
+	return rs1 + (rvb_rorw(rs2, 19) ^ rvb_rorw(rs2, 61) ^ (rs2 >> 6));
 }
 
-//	(((a | c) & b) | (c & a)) = Maj(a, b, c)
-//	((e & f) ^ rv_andn(g, e)) = Ch(e, f, g)
+//  (((a | c) & b) | (c & a)) = Maj(a, b, c)
+//  ((e & f) ^ rvb_andn(g, e)) = Ch(e, f, g)
 
-//	processing step, sets "d" and "h" as a function of all 8 inputs
-//	and message schedule "mi", round constant "ki"
+//  processing step, sets "d" and "h" as a function of all 8 inputs
+//  and message schedule "mi", round constant "ki"
 #define SHA512R(a, b, c, d, e, f, g, h, mi, ki) {	\
-	h = h + ((e & f) ^ rv_andn(g, e)) + mi + ki;	\
+	h = h + ((e & f) ^ rvb_andn(g, e)) + mi + ki;	\
 	h = sha512_sum1(h, e);							\
 	d = d + h;										\
 	h = sha512_sum0(h, a);							\
 	h = h + (((a | c) & b) | (c & a));				}
 
-//	keying step, sets x0 as a function of 4 inputs
+//  keying step, sets x0 as a function of 4 inputs
 #define SHA512K(x0, x1, x9, xe) {	\
 	x0 = x0 + x9;					\
 	x0 = sha512_sig0(x0, x1);		\
 	x0 = sha512_sig1(x0, xe); }
 
-//	compression function (this one does *not* modify m[16])
+//  compression function (this one does *not* modify m[16])
 
-void rv64_sha512_compress(uint64_t *s, uint64_t *m)
+void rv64_sha512_compress(void *s, void *m)
 {
-	//	4.2.3 SHA-384, SHA-512, SHA-512/224 and SHA-512/256 Constants
+	//  4.2.3 SHA-384, SHA-512, SHA-512/224 and SHA-512/256 Constants
 
 	const uint64_t ck[80] = {
 		0x428A2F98D728AE22LL, 0x7137449123EF65CDLL, 0xB5C0FBCFEC4D3B2FLL,
@@ -90,66 +90,92 @@ void rv64_sha512_compress(uint64_t *s, uint64_t *m)
 		0x5FCB6FAB3AD6FAECLL, 0x6C44198C4A475817LL
 	};
 
-	uint64_t	a, b, c, d, e, f, g, h;
-	uint64_t	m0, m1, m2, m3, m4, m5, m6, m7,
-				m8, m9, ma, mb, mc, md, me, mf;
+	uint64_t a, b, c, d, e, f, g, h;
+	uint64_t m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, ma, mb, mc, md, me, mf;
 
-	const uint64_t *k;
+	const uint64_t *k, *mp = m;
+	uint64_t *sp = s;
 
-	a = s[0];	b = s[1];	c = s[2];	d = s[3];
-	e = s[4];	f = s[5];	g = s[6];	h = s[7];
+	a = sp[0];
+	b = sp[1];
+	c = sp[2];
+	d = sp[3];
+	e = sp[4];
+	f = sp[5];
+	g = sp[6];
+	h = sp[7];
 
-	//	load with rev8
+	//  load with rev8
 
-	m0 = rv_grevw(m[ 0], 0x38); m1 = rv_grevw(m[ 1], 0x38);
-	m2 = rv_grevw(m[ 2], 0x38); m3 = rv_grevw(m[ 3], 0x38);
-	m4 = rv_grevw(m[ 4], 0x38); m5 = rv_grevw(m[ 5], 0x38);
-	m6 = rv_grevw(m[ 6], 0x38); m7 = rv_grevw(m[ 7], 0x38);
-	m8 = rv_grevw(m[ 8], 0x38); m9 = rv_grevw(m[ 9], 0x38);
-	ma = rv_grevw(m[10], 0x38); mb = rv_grevw(m[11], 0x38);
-	mc = rv_grevw(m[12], 0x38); md = rv_grevw(m[13], 0x38);
-	me = rv_grevw(m[14], 0x38); mf = rv_grevw(m[15], 0x38);
+	m0 = rvb_grevw(mp[0], 0x38);
+	m1 = rvb_grevw(mp[1], 0x38);
+	m2 = rvb_grevw(mp[2], 0x38);
+	m3 = rvb_grevw(mp[3], 0x38);
+	m4 = rvb_grevw(mp[4], 0x38);
+	m5 = rvb_grevw(mp[5], 0x38);
+	m6 = rvb_grevw(mp[6], 0x38);
+	m7 = rvb_grevw(mp[7], 0x38);
+	m8 = rvb_grevw(mp[8], 0x38);
+	m9 = rvb_grevw(mp[9], 0x38);
+	ma = rvb_grevw(mp[10], 0x38);
+	mb = rvb_grevw(mp[11], 0x38);
+	mc = rvb_grevw(mp[12], 0x38);
+	md = rvb_grevw(mp[13], 0x38);
+	me = rvb_grevw(mp[14], 0x38);
+	mf = rvb_grevw(mp[15], 0x38);
 
 	k = ck;
 
-	goto skipks;								//	skip first key schedule
+	goto skipks;							//  skip first key schedule
 
 	do {
 
-		SHA512K(m0, m1, m9, me);	SHA512K(m1, m2, ma, mf);
-		SHA512K(m2, m3, mb, m0);	SHA512K(m3, m4, mc, m1);
-		SHA512K(m4, m5, md, m2);	SHA512K(m5, m6, me, m3);
-		SHA512K(m6, m7, mf, m4);	SHA512K(m7, m8, m0, m5);
-		SHA512K(m8, m9, m1, m6);	SHA512K(m9, ma, m2, m7);
-		SHA512K(ma, mb, m3, m8);	SHA512K(mb, mc, m4, m9);
-		SHA512K(mc, md, m5, ma);	SHA512K(md, me, m6, mb);
-		SHA512K(me, mf, m7, mc);	SHA512K(mf, m0, m8, md);
+		SHA512K(m0, m1, m9, me);
+		SHA512K(m1, m2, ma, mf);
+		SHA512K(m2, m3, mb, m0);
+		SHA512K(m3, m4, mc, m1);
+		SHA512K(m4, m5, md, m2);
+		SHA512K(m5, m6, me, m3);
+		SHA512K(m6, m7, mf, m4);
+		SHA512K(m7, m8, m0, m5);
+		SHA512K(m8, m9, m1, m6);
+		SHA512K(m9, ma, m2, m7);
+		SHA512K(ma, mb, m3, m8);
+		SHA512K(mb, mc, m4, m9);
+		SHA512K(mc, md, m5, ma);
+		SHA512K(md, me, m6, mb);
+		SHA512K(me, mf, m7, mc);
+		SHA512K(mf, m0, m8, md);
 
-	skipks:
+	  skipks:
 
-		SHA512R( a, b, c, d, e, f, g, h, m0, k[ 0] );
-		SHA512R( h, a, b, c, d, e, f, g, m1, k[ 1] );
-		SHA512R( g, h, a, b, c, d, e, f, m2, k[ 2] );
-		SHA512R( f, g, h, a, b, c, d, e, m3, k[ 3] );
-		SHA512R( e, f, g, h, a, b, c, d, m4, k[ 4] );
-		SHA512R( d, e, f, g, h, a, b, c, m5, k[ 5] );
-		SHA512R( c, d, e, f, g, h, a, b, m6, k[ 6] );
-		SHA512R( b, c, d, e, f, g, h, a, m7, k[ 7] );
-		SHA512R( a, b, c, d, e, f, g, h, m8, k[ 8] );
-		SHA512R( h, a, b, c, d, e, f, g, m9, k[ 9] );
-		SHA512R( g, h, a, b, c, d, e, f, ma, k[10] );
-		SHA512R( f, g, h, a, b, c, d, e, mb, k[11] );
-		SHA512R( e, f, g, h, a, b, c, d, mc, k[12] );
-		SHA512R( d, e, f, g, h, a, b, c, md, k[13] );
-		SHA512R( c, d, e, f, g, h, a, b, me, k[14] );
-		SHA512R( b, c, d, e, f, g, h, a, mf, k[15] );
+		SHA512R(a, b, c, d, e, f, g, h, m0, k[0]);
+		SHA512R(h, a, b, c, d, e, f, g, m1, k[1]);
+		SHA512R(g, h, a, b, c, d, e, f, m2, k[2]);
+		SHA512R(f, g, h, a, b, c, d, e, m3, k[3]);
+		SHA512R(e, f, g, h, a, b, c, d, m4, k[4]);
+		SHA512R(d, e, f, g, h, a, b, c, m5, k[5]);
+		SHA512R(c, d, e, f, g, h, a, b, m6, k[6]);
+		SHA512R(b, c, d, e, f, g, h, a, m7, k[7]);
+		SHA512R(a, b, c, d, e, f, g, h, m8, k[8]);
+		SHA512R(h, a, b, c, d, e, f, g, m9, k[9]);
+		SHA512R(g, h, a, b, c, d, e, f, ma, k[10]);
+		SHA512R(f, g, h, a, b, c, d, e, mb, k[11]);
+		SHA512R(e, f, g, h, a, b, c, d, mc, k[12]);
+		SHA512R(d, e, f, g, h, a, b, c, md, k[13]);
+		SHA512R(c, d, e, f, g, h, a, b, me, k[14]);
+		SHA512R(b, c, d, e, f, g, h, a, mf, k[15]);
 
 		k += 16;
 
 	} while (k != &ck[80]);
 
-	s[0] = s[0] + a;	s[1] = s[1] + b;
-	s[2] = s[2] + c;	s[3] = s[3] + d;
-	s[4] = s[4] + e;	s[5] = s[5] + f;
-	s[6] = s[6] + g;	s[7] = s[7] + h;
+	sp[0] = sp[0] + a;
+	sp[1] = sp[1] + b;
+	sp[2] = sp[2] + c;
+	sp[3] = sp[3] + d;
+	sp[4] = sp[4] + e;
+	sp[5] = sp[5] + f;
+	sp[6] = sp[6] + g;
+	sp[7] = sp[7] + h;
 }

@@ -1,27 +1,27 @@
-//	test_hex.c
-//	2020-03-07	Markku-Juhani O. Saarinen <mjos@pqshield.com>
-//	Copyright (c) 2020, PQShield Ltd. All rights reserved.
+//  test_hex.c
+//  2020-03-07  Markku-Juhani O. Saarinen <mjos@pqshield.com>
+//  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-//	functions to facilitate simple runtime tests
+//  functions to facilitate simple runtime tests
 
 #include "test_hex.h"
 
-//	single hex digit
+//  single hex digit
 
 static int hexdigit(char ch)
 {
 	if (ch >= '0' && ch <= '9')
-		return	ch - '0';
+		return ch - '0';
 	if (ch >= 'A' && ch <= 'F')
-		return	ch - 'A' + 10;
+		return ch - 'A' + 10;
 	if (ch >= 'a' && ch <= 'f')
-		return	ch - 'a' + 10;
+		return ch - 'a' + 10;
 	return -1;
 }
 
-//	read a hex string of "maxbytes", return byte length
+//  read a hex string of "maxbytes", return byte length
 
-size_t readhex(uint8_t *buf, size_t maxbytes, const char *str)
+size_t readhex(uint8_t * buf, size_t maxbytes, const char *str)
 {
 	size_t i;
 	int h, l;
@@ -39,7 +39,7 @@ size_t readhex(uint8_t *buf, size_t maxbytes, const char *str)
 	return i;
 }
 
-//	print hexadecimal "data", length "len", with label "lab"
+//  print hexadecimal "data", length "len", with label "lab"
 
 void prthex(const char *lab, const void *data, size_t len)
 {
@@ -57,7 +57,7 @@ void prthex(const char *lab, const void *data, size_t len)
 	putchar('\n');
 }
 
-//	check "data" of "len" bytes against a hexadecimal test vector "ref"
+//  check "data" of "len" bytes against a hexadecimal test vector "ref"
 
 int chkhex(const char *lab, const void *data, size_t len, const char *ref)
 {
@@ -65,7 +65,7 @@ int chkhex(const char *lab, const void *data, size_t len, const char *ref)
 	uint8_t x;
 	int fail = 0;
 
-	//	check equivalence
+	//  check equivalence
 	for (i = 0; i < len; i++) {
 		x = ((const uint8_t *) data)[i];
 		if (hexdigit(ref[2 * i]) != ((x >> 4) & 0xF) ||
@@ -87,4 +87,3 @@ int chkhex(const char *lab, const void *data, size_t len, const char *ref)
 
 	return fail;
 }
-

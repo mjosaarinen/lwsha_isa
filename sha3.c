@@ -1,22 +1,22 @@
-//	sha3.c
-//	2020-03-02	Markku-Juhani O. Saarinen <mjos@pqshield.com>
-//	Copyright (c) 2020, PQShield Ltd. All rights reserved.
+//  sha3.c
+//  2020-03-02  Markku-Juhani O. Saarinen <mjos@pqshield.com>
+//  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-//	FIPS 202: SHA-3 hash and SHAKE eXtensible Output Functions (XOF)
-//	Hash padding mode code for testing permutation implementations.
+//  FIPS 202: SHA-3 hash and SHAKE eXtensible Output Functions (XOF)
+//  Hash padding mode code for testing permutation implementations.
 
 #include "sha3.h"
 
-//	These functions have not been optimized for performance -- they are
-//	here just to facilitate testing of the permutation code implementations.
+//  These functions have not been optimized for performance -- they are
+//  here just to facilitate testing of the permutation code implementations.
 
-//	externally visible pointer to the permutation implementation
+//  externally visible pointer to the permutation implementation
 
 void (*sha3_keccakp)(void *) = rv64_keccakp;
 
-//	initialize the context for SHA3
+//  initialize the context for SHA3
 
-void sha3_init(sha3_ctx_t *c, int mdlen)
+void sha3_init(sha3_ctx_t * c, int mdlen)
 {
 	int i;
 
@@ -27,9 +27,9 @@ void sha3_init(sha3_ctx_t *c, int mdlen)
 	c->pt = 0;
 }
 
-//	update state with more data
+//  update state with more data
 
-void sha3_update(sha3_ctx_t *c, const void *data, size_t len)
+void sha3_update(sha3_ctx_t * c, const void *data, size_t len)
 {
 	size_t i;
 	int j;
@@ -45,9 +45,9 @@ void sha3_update(sha3_ctx_t *c, const void *data, size_t len)
 	c->pt = j;
 }
 
-//	finalize and output a hash
+//  finalize and output a hash
 
-void sha3_final(uint8_t *md, sha3_ctx_t *c)
+void sha3_final(uint8_t * md, sha3_ctx_t * c)
 {
 	int i;
 
@@ -60,9 +60,9 @@ void sha3_final(uint8_t *md, sha3_ctx_t *c)
 	}
 }
 
-//	compute a SHA-3 hash "md" of "mdlen" bytes from data in "in"
+//  compute a SHA-3 hash "md" of "mdlen" bytes from data in "in"
 
-void *sha3(uint8_t *md, int mdlen, const void *in, size_t inlen)
+void *sha3(uint8_t * md, int mdlen, const void *in, size_t inlen)
 {
 	sha3_ctx_t sha3;
 
@@ -73,11 +73,11 @@ void *sha3(uint8_t *md, int mdlen, const void *in, size_t inlen)
 	return md;
 }
 
-//	SHAKE128 and SHAKE256 extensible-output functionality
+//  SHAKE128 and SHAKE256 extensible-output functionality
 
-//	add padding (call once after calls to shake_update() are done
+//  add padding (call once after calls to shake_update() are done
 
-void shake_xof(sha3_ctx_t *c)
+void shake_xof(sha3_ctx_t * c)
 {
 	c->st.b[c->pt] ^= 0x1F;
 	c->st.b[c->rsiz - 1] ^= 0x80;
@@ -85,9 +85,9 @@ void shake_xof(sha3_ctx_t *c)
 	c->pt = 0;
 }
 
-//	squeeze output
+//  squeeze output
 
-void shake_out(uint8_t *out, size_t len, sha3_ctx_t *c)
+void shake_out(uint8_t * out, size_t len, sha3_ctx_t * c)
 {
 	size_t i;
 	int j;
@@ -102,4 +102,3 @@ void shake_out(uint8_t *out, size_t len, sha3_ctx_t *c)
 	}
 	c->pt = j;
 }
-

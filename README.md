@@ -103,22 +103,22 @@ implementation files. For example for SHA-256 we have:
 ```C
 uint32_t sha256_sum0(uint32_t rs1, uint32_t rs2)
 {
-    return rs1 + (rv_ror(rs2,  2) ^ rv_ror(rs2, 13) ^ rv_ror(rs2, 22));
+    return rs1 + (rvb_ror(rs2,  2) ^ rvb_ror(rs2, 13) ^ rvb_ror(rs2, 22));
 }
 
 uint32_t sha256_sum1(uint32_t rs1, uint32_t rs2)
 {
-    return rs1 + (rv_ror(rs2,  6) ^ rv_ror(rs2, 11) ^ rv_ror(rs2, 25));
+    return rs1 + (rvb_ror(rs2,  6) ^ rvb_ror(rs2, 11) ^ rvb_ror(rs2, 25));
 }
 
 uint32_t sha256_sig0(uint32_t rs1, uint32_t rs2)
 {
-    return rs1 + (rv_ror(rs2,  7) ^ rv_ror(rs2, 18) ^ (rs2 >>  3));
+    return rs1 + (rvb_ror(rs2,  7) ^ rvb_ror(rs2, 18) ^ (rs2 >>  3));
 }
 
 uint32_t sha256_sig1(uint32_t rs1, uint32_t rs2)
 {
-    return rs1 + (rv_ror(rs2, 17) ^ rv_ror(rs2, 19) ^ (rs2 >> 10));
+    return rs1 + (rvb_ror(rs2, 17) ^ rvb_ror(rs2, 19) ^ (rs2 >> 10));
 }
 ```
 
@@ -194,7 +194,7 @@ related to P1 permutation that would combine 3 RORIs and 3 XORs in K step:
 ```C
 uint32_t sm3p1(uint32_t rs1, uint32_t rs2) 
 {
-    return rs1 ^ rv_ror(rs1,  9) ^ rv_ror(rs1, 17) ^ rv_ror(rs2, 25);
+    return rs1 ^ rvb_ror(rs1,  9) ^ rvb_ror(rs1, 17) ^ rvb_ror(rs2, 25);
 }
 ```
 would save 208 instructions only (roughly 10%). Even with multiple such
