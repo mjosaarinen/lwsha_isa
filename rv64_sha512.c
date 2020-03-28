@@ -14,26 +14,26 @@
 
 //  upper case sigma0, sigma1 is "sum"
 
-uint64_t sha512_sum0(uint64_t rs1, uint64_t rs2)
+uint64_t sha512_sum0(uint64_t rs1)
 {
-	return rs1 + (rvb_rorw(rs2, 28) ^ rvb_rorw(rs2, 34) ^ rvb_rorw(rs2, 39));
+	return rvb_rorw(rs1, 28) ^ rvb_rorw(rs1, 34) ^ rvb_rorw(rs1, 39);
 }
 
-uint64_t sha512_sum1(uint64_t rs1, uint64_t rs2)
+uint64_t sha512_sum1(uint64_t rs1)
 {
-	return rs1 + (rvb_rorw(rs2, 14) ^ rvb_rorw(rs2, 18) ^ rvb_rorw(rs2, 41));
+	return rvb_rorw(rs1, 14) ^ rvb_rorw(rs1, 18) ^ rvb_rorw(rs1, 41);
 }
 
 //  lower case sigma0, sigma1 is "sig"
 
-uint64_t sha512_sig0(uint64_t rs1, uint64_t rs2)
+uint64_t sha512_sig0(uint64_t rs1)
 {
-	return rs1 + (rvb_rorw(rs2, 1) ^ rvb_rorw(rs2, 8) ^ (rs2 >> 7));
+	return rvb_rorw(rs1, 1) ^ rvb_rorw(rs1, 8) ^ (rs1 >> 7);
 }
 
-uint64_t sha512_sig1(uint64_t rs1, uint64_t rs2)
+uint64_t sha512_sig1(uint64_t rs1)
 {
-	return rs1 + (rvb_rorw(rs2, 19) ^ rvb_rorw(rs2, 61) ^ (rs2 >> 6));
+	return rvb_rorw(rs1, 19) ^ rvb_rorw(rs1, 61) ^ (rs1 >> 6);
 }
 
 //  (((a | c) & b) | (c & a)) = Maj(a, b, c)
@@ -43,16 +43,16 @@ uint64_t sha512_sig1(uint64_t rs1, uint64_t rs2)
 //  and message schedule "mi", round constant "ki"
 #define SHA512R(a, b, c, d, e, f, g, h, mi, ki) {	\
 	h = h + ((e & f) ^ rvb_andn(g, e)) + mi + ki;	\
-	h = sha512_sum1(h, e);							\
+	h = h + sha512_sum1(e);							\
 	d = d + h;										\
-	h = sha512_sum0(h, a);							\
+	h = h + sha512_sum0(a);							\
 	h = h + (((a | c) & b) | (c & a));				}
 
 //  keying step, sets x0 as a function of 4 inputs
 #define SHA512K(x0, x1, x9, xe) {	\
 	x0 = x0 + x9;					\
-	x0 = sha512_sig0(x0, x1);		\
-	x0 = sha512_sig1(x0, xe); }
+	x0 = x0 + sha512_sig0(x1);		\
+	x0 = x0 + sha512_sig1(xe); }
 
 //  compression function (this one does *not* modify m[16])
 

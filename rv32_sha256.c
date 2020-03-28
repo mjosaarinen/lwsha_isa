@@ -134,10 +134,9 @@ void rv32_sha256_compress(void *s)
 		SHA256R(c, d, e, f, g, h, a, b, me, kp[14]);
 		SHA256R(b, c, d, e, f, g, h, a, mf, kp[15]);
 
-		kp += 16;
-
-		if (kp == &ck[64])
+		if (kp == &ck[64 - 16])
 			break;
+		kp += 16;
 
 		SHA256K(m0, m1, m9, me);			//  message schedule
 		SHA256K(m1, m2, ma, mf);
