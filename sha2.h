@@ -24,16 +24,16 @@ void sha2_512(uint8_t * md, const void *in, size_t inlen);
 
 
 //  function pointer to the compression function used by the test wrappers
-extern void (*sha256_compress)(void *, void *);
-extern void (*sha512_compress)(void *, void *);
+extern void (*sha256_compress)(void *);
+extern void (*sha512_compress)(void *);
 
 //  SHA-256 compression function for RV32 (rv32_sha256.c)
-void rv32_sha256_compress(void *s, void *m);
+void rv32_sha256_compress(void *s);
 
 //  SHA-512 compression function for RV64 (rv64_sha512.c)
-void rv64_sha512_compress(void *s, void *m);
+void rv64_sha512_compress(void *s);
 
 //  SHA-512 compression function for RV32 (rv32_sha512.c)
-void rv32_sha512_compress(void *s, void *m);
+void rv32_sha512_compress(void *s);
 
 #endif

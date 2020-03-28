@@ -56,7 +56,7 @@ uint64_t sha512_sig1(uint64_t rs1, uint64_t rs2)
 
 //  compression function (this one does *not* modify m[16])
 
-void rv64_sha512_compress(void *s, void *m)
+void rv64_sha512_compress(void *s)
 {
 	//  4.2.3 SHA-384, SHA-512, SHA-512/224 and SHA-512/256 Constants
 
@@ -93,8 +93,9 @@ void rv64_sha512_compress(void *s, void *m)
 	uint64_t a, b, c, d, e, f, g, h;
 	uint64_t m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, ma, mb, mc, md, me, mf;
 
-	const uint64_t *k, *mp = m;
 	uint64_t *sp = s;
+	const uint64_t *mp = sp + 8;
+	const uint64_t *kp = ck;
 
 	a = sp[0];
 	b = sp[1];
@@ -124,13 +125,32 @@ void rv64_sha512_compress(void *s, void *m)
 	me = rvb_grevw(mp[14], 0x38);
 	mf = rvb_grevw(mp[15], 0x38);
 
-	k = ck;
+	while (1) {
 
-	goto skipks;							//  skip first key schedule
+		//  main rounds
+		SHA512R(a, b, c, d, e, f, g, h, m0, kp[0]);
+		SHA512R(h, a, b, c, d, e, f, g, m1, kp[1]);
+		SHA512R(g, h, a, b, c, d, e, f, m2, kp[2]);
+		SHA512R(f, g, h, a, b, c, d, e, m3, kp[3]);
+		SHA512R(e, f, g, h, a, b, c, d, m4, kp[4]);
+		SHA512R(d, e, f, g, h, a, b, c, m5, kp[5]);
+		SHA512R(c, d, e, f, g, h, a, b, m6, kp[6]);
+		SHA512R(b, c, d, e, f, g, h, a, m7, kp[7]);
+		SHA512R(a, b, c, d, e, f, g, h, m8, kp[8]);
+		SHA512R(h, a, b, c, d, e, f, g, m9, kp[9]);
+		SHA512R(g, h, a, b, c, d, e, f, ma, kp[10]);
+		SHA512R(f, g, h, a, b, c, d, e, mb, kp[11]);
+		SHA512R(e, f, g, h, a, b, c, d, mc, kp[12]);
+		SHA512R(d, e, f, g, h, a, b, c, md, kp[13]);
+		SHA512R(c, d, e, f, g, h, a, b, me, kp[14]);
+		SHA512R(b, c, d, e, f, g, h, a, mf, kp[15]);
 
-	do {
 
-		SHA512K(m0, m1, m9, me);
+		if (kp == &ck[80 - 16])
+			break;
+		kp += 16;
+
+		SHA512K(m0, m1, m9, me);			//  key schedule
 		SHA512K(m1, m2, ma, mf);
 		SHA512K(m2, m3, mb, m0);
 		SHA512K(m3, m4, mc, m1);
@@ -146,29 +166,7 @@ void rv64_sha512_compress(void *s, void *m)
 		SHA512K(md, me, m6, mb);
 		SHA512K(me, mf, m7, mc);
 		SHA512K(mf, m0, m8, md);
-
-	  skipks:
-
-		SHA512R(a, b, c, d, e, f, g, h, m0, k[0]);
-		SHA512R(h, a, b, c, d, e, f, g, m1, k[1]);
-		SHA512R(g, h, a, b, c, d, e, f, m2, k[2]);
-		SHA512R(f, g, h, a, b, c, d, e, m3, k[3]);
-		SHA512R(e, f, g, h, a, b, c, d, m4, k[4]);
-		SHA512R(d, e, f, g, h, a, b, c, m5, k[5]);
-		SHA512R(c, d, e, f, g, h, a, b, m6, k[6]);
-		SHA512R(b, c, d, e, f, g, h, a, m7, k[7]);
-		SHA512R(a, b, c, d, e, f, g, h, m8, k[8]);
-		SHA512R(h, a, b, c, d, e, f, g, m9, k[9]);
-		SHA512R(g, h, a, b, c, d, e, f, ma, k[10]);
-		SHA512R(f, g, h, a, b, c, d, e, mb, k[11]);
-		SHA512R(e, f, g, h, a, b, c, d, mc, k[12]);
-		SHA512R(d, e, f, g, h, a, b, c, md, k[13]);
-		SHA512R(c, d, e, f, g, h, a, b, me, k[14]);
-		SHA512R(b, c, d, e, f, g, h, a, mf, k[15]);
-
-		k += 16;
-
-	} while (k != &ck[80]);
+	}
 
 	sp[0] = sp[0] + a;
 	sp[1] = sp[1] + b;

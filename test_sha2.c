@@ -37,15 +37,15 @@ int test_sha256()
 	int fail = 0;
 	int i;
 
-	//  SHA2-224
-	sha2_224(md, in, readhex(in, sizeof(in), "10713B894DE4A734C0"));
-	fail += chkhex("SHA2-224", md, 28,
-				   "03842600C86F5CD60C3A2147A067CB962A05303C3488B05CB45327BD");
-
 	//  SHA2-256
 	sha2_256(md, "abc", 3);
 	fail += chkhex("SHA2-256", md, 32,
 				   "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD");
+
+	//  SHA2-224
+	sha2_224(md, in, readhex(in, sizeof(in), "10713B894DE4A734C0"));
+	fail += chkhex("SHA2-224", md, 28,
+				   "03842600C86F5CD60C3A2147A067CB962A05303C3488B05CB45327BD");
 
 	//  padding tests
 	for (i = 0; sha256_tv[i][0] != NULL; i++) {
@@ -63,6 +63,19 @@ int test_sha512()
 	uint8_t md[64], in[256];
 	int fail = 0;
 
+	//  SHA2-512
+	sha2_512(md, "abc", 3);
+	fail += chkhex("SHA2-512", md, 64,
+				   "DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A"
+				   "2192992A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54CA49F");
+
+	//  SHA2-512
+	sha2_512(md, "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmn"
+			 "hijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu", 112);
+	fail += chkhex("SHA2-512", md, 64,
+				   "8E959B75DAE313DA8CF4F72814FC143F8F7779C6EB9F7FA17299AEADB6889018"
+				   "501D289E4900F7E4331B99DEC4B5433AC7D329EEB6DD26545E96E55B874BE909");
+
 	//  SHA2-384
 	sha2_384(md, "", 0);
 	fail += chkhex("SHA2-384", md, 48,
@@ -78,18 +91,6 @@ int test_sha512()
 				   "E7089D72945CEF851E689B4409CFB63D135F0B5CDFB0DAC6"
 				   "C3A292DD70371AB4B79DA1997D7992906AC7213502662920");
 
-	//  SHA2-512
-	sha2_512(md, "abc", 3);
-	fail += chkhex("SHA2-512", md, 64,
-				   "DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A"
-				   "2192992A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54CA49F");
-
-	//  SHA2-512
-	sha2_512(md, "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmn"
-			 "hijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu", 112);
-	fail += chkhex("SHA2-512", md, 64,
-				   "8E959B75DAE313DA8CF4F72814FC143F8F7779C6EB9F7FA17299AEADB6889018"
-				   "501D289E4900F7E4331B99DEC4B5433AC7D329EEB6DD26545E96E55B874BE909");
 
 	return fail;
 }

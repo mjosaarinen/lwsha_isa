@@ -10,46 +10,41 @@
 
 //  pointers to the compression functions
 
-void (*sha256_compress)(void *s, void *) = &rv32_sha256_compress;
-void (*sha512_compress)(void *s, void *) = &rv64_sha512_compress;
-
+void (*sha256_compress)(void *s) = &rv32_sha256_compress;
+void (*sha512_compress)(void *s) = &rv64_sha512_compress;
 
 //  shared part between SHA-224 and SHA-256
 
-static void sha256pad(uint32_t s[8], const void *in, size_t inlen)
+static void sha256pad(uint32_t * s, const void *in, size_t inlen)
 {
-	union {									//  aligned:
-		uint8_t b[64];						//  8-bit bytes
-		uint32_t w[16];						//  32-bit words
-	} m;
 	size_t i;
 	uint64_t x;
-
-	const uint8_t *p = in;
+	uint8_t *mp = (uint8_t *) & s[8];
+	const uint8_t *ip = in;
 
 	//  "md padding"
 	x = inlen << 3;							//  length in bits
 
 	while (inlen >= 64) {					//  full blocks
-		memcpy(m.b, p, 64);
-		sha256_compress(s, m.w);
+		memcpy(mp, ip, 64);
+		sha256_compress(s);
 		inlen -= 64;
-		p += 64;
+		ip += 64;
 	}
-	memcpy(m.b, p, inlen);					//  last data block
-	m.b[inlen++] = 0x80;
+	memcpy(mp, ip, inlen);					//  last data block
+	mp[inlen++] = 0x80;
 	if (inlen > 56) {
-		memset(&m.b[inlen], 0x00, 64 - inlen);
-		sha256_compress(s, m.w);
+		memset(mp + inlen, 0x00, 64 - inlen);
+		sha256_compress(s);
 		inlen = 0;
 	}
 	i = 64;									//  process length
 	while (x > 0) {
-		m.b[--i] = x & 0xFF;
+		mp[--i] = x & 0xFF;
 		x >>= 8;
 	}
-	memset(&m.b[inlen], 0x00, i - inlen);
-	sha256_compress(s, m.w);
+	memset(mp + inlen, 0x00, i - inlen);
+	sha256_compress(s);
 }
 
 //  Compute 28-byte message digest to "md" from "in" which has "inlen" bytes
@@ -57,7 +52,7 @@ static void sha256pad(uint32_t s[8], const void *in, size_t inlen)
 void sha2_224(uint8_t * md, const void *in, size_t inlen)
 {
 	size_t i;
-	uint32_t t, s[8];
+	uint32_t t, s[8 + 24];
 
 	//  SHA-224 initial values H0, Sect 5.3.2.
 	s[0] = 0xC1059ED8;
@@ -86,13 +81,14 @@ void sha2_224(uint8_t * md, const void *in, size_t inlen)
 void sha2_256(uint8_t * md, const void *in, size_t inlen)
 {
 	size_t i;
-	uint32_t t, s[8];
+	uint32_t t, s[8 + 16];
 
 	//  SHA-256 initial values H0, Sect 5.3.3.
 	s[0] = 0x6A09E667;
 	s[1] = 0xBB67AE85;
 	s[2] = 0x3C6EF372;
-	s[3] = 0xA54FF53A, s[4] = 0x510E527F;
+	s[3] = 0xA54FF53A;
+	s[4] = 0x510E527F;
 	s[5] = 0x9B05688C;
 	s[6] = 0x1F83D9AB;
 	s[7] = 0x5BE0CD19;
@@ -113,39 +109,35 @@ void sha2_256(uint8_t * md, const void *in, size_t inlen)
 
 static void sha512pad(uint64_t s[8], const void *in, size_t inlen)
 {
-	union {									//  aligned:
-		uint8_t b[128];						//  8-bit bytes
-		uint64_t d[16];						//  64-bit words
-	} m;
-
 	size_t i;
 	uint64_t x;
 
-	const uint8_t *p = in;
+	uint8_t *mp = (uint8_t *) & s[8];
+	const uint8_t *ip = in;
 
 	//  "md padding"
 	x = inlen << 3;							//  length in bits
 
 	while (inlen >= 128) {					//  full blocks
-		memcpy(m.b, p, 128);
-		sha512_compress(s, m.d);
+		memcpy(mp, ip, 128);
+		sha512_compress(s);
 		inlen -= 128;
-		p += 128;
+		ip += 128;
 	}
-	memcpy(m.b, p, inlen);					//  last data block
-	m.b[inlen++] = 0x80;
+	memcpy(mp, ip, inlen);					//  last data block
+	mp[inlen++] = 0x80;
 	if (inlen > 112) {
-		memset(&m.b[inlen], 0x00, 128 - inlen);
-		sha512_compress(s, m.d);
+		memset(mp + inlen, 0x00, 128 - inlen);
+		sha512_compress(s);
 		inlen = 0;
 	}
 	i = 128;								//  process length
 	while (x > 0) {
-		m.b[--i] = x & 0xFF;
+		mp[--i] = x & 0xFF;
 		x >>= 8;
 	}
-	memset(&m.b[inlen], 0x00, i - inlen);
-	sha512_compress(s, m.d);
+	memset(mp + inlen, 0x00, i - inlen);
+	sha512_compress(s);
 }
 
 //  Compute 48-byte message digest to "md" from "in" which has "inlen" bytes
@@ -153,7 +145,7 @@ static void sha512pad(uint64_t s[8], const void *in, size_t inlen)
 void sha2_384(uint8_t * md, const void *in, size_t inlen)
 {
 	size_t i;
-	uint64_t t, s[8];
+	uint64_t t, s[8 + 16];
 
 	//  SHA-384 initial values H0, Sect 5.3.4.
 
@@ -187,7 +179,7 @@ void sha2_384(uint8_t * md, const void *in, size_t inlen)
 void sha2_512(uint8_t * md, const void *in, size_t inlen)
 {
 	size_t i;
-	uint64_t t, s[8];
+	uint64_t t, s[8 + 16];
 
 	//  SHA-512 initial values H0, Sect 5.3.5.
 
