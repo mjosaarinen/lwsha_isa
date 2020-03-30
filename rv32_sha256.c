@@ -3,7 +3,6 @@
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
 //  FIPS 180-4 SHA2-224/256 compression function for RV32
-
 #include "sha2.h"
 
 //  bitmanip (emulation) prototypes here
