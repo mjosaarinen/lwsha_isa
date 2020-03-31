@@ -60,7 +60,7 @@ uint32_t sm3_p1(uint32_t rs1)
 	tj = rvb_ror(tj, 31);							}
 
 
-//  compression function (this one does *not* modify m[8..23])
+//  compression function (this one does *not* modify mp[])
 
 void rv32_sm3_compress(void *s)
 {
