@@ -2,6 +2,9 @@
 
 March 11, 2020  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 
+**Updated** March 31, 2020: Changed the two-operand instructions, added
+consideration for SHA2-512 on RV32 and also the Chinese hash SM3.
+
 ##  Description and Goal
 
 [RISC-V](https://riscv.org/) ISA Extension design exploration for the current
@@ -80,7 +83,7 @@ ROR and ANDN are typically expected in ISAs, although they are missing
 from the RV32I/RV64I base -- here they give up to 50% performance
 boost, but the main advantage is really the large register file.
 
-##  SHA-2
+##  SHA-2 Basic Extensions
 
 The SHA-2 code explores the use of special instructions for "Scalar SHA2
 Acceleration", which offer to accelerate all SHA2 algorithms on RV64 and
@@ -134,62 +137,131 @@ although data path size differs 32/64-bit).
 
 Hence we have the following core loop instruction mix:
 
-|           |   K   |   R   | SHA2-224/256  | SHA2-384/512  |
-|----------:|------:|------:|--------------:|--------------:|
-| ADD       |   1   |   5   |   368         |   464         |
-| AND       |   0   |   3   |   192         |   240         |
-| ANDN      |   0   |   1   |   64          |   80          |
-| OR        |   0   |   2   |   128         |   160         |
-| SHAx      |   2   |   2   |   224         |   288         |
-| **Total** |   3   |   13  |   **976**     |   **1232**    |
+| **Type**  | **K** | **R** | SHA2-256  | SHA2-512  |
+|----------:|------:|------:|----------:|----------:|
+| ADD       |   3   |   7   |   592     |   752     |
+| AND       |   0   |   3   |   192     |   240     |
+| ANDN      |   0   |   1   |   64      |   80      |
+| OR        |   0   |   2   |   128     |   160     |
+| SHAx_y    |   2   |   2   |   224     |   288     |
+| **Total** |   5   |   15  | **1200**  | **1520**  |
 
-Each SHAx instruction would decompose into 6-12 base instructions (even with
-rotate), so this is a significant speedup (2 × faster or more). The ADD
-fused here is just an opportunistic 20% performance improvement over the
-current spec.
+Each SHAx instruction would decompose into 5-10 base instructions (even with
+rotate), so this is a significant speedup (2 × faster or more).
+Note that we are ignoring the operations required for endianess, padding, and
+Merkle-Damgård addition here.
 
-SHA2-384/512 on RV32 is not tackled yet; implementing its entirely
-64-bit data paths on RV32 is challenging. The large number of 64-bit additions
-will result in a lot of SLTUs because RISC-V has no carry. Those additions
-also make the interleaving technique used for SHA-3 unusable and therefore
-there may be a need for funnel shifts.
+
+##  SHA2-512 on RV32; Where things get Hairy
+
+[rv32_sha512.c](rv32_sha512.c) is an implementation of the SHA2-384/512
+compression function on RV32 and is much more complicated than the
+two other versions. The large number of 64-bit additions will result in
+a lot of SLTUs because RISC-V has no carry flag. Those additions
+also make the interleaving technique used for SHA-3 unusable. However
+splitting the "Sum" and "Sigma" operations into eight single-operand
+instructions, each a linear operation with two 32-bit inputs removes
+the need to emulate 64-bit shifts.
+
+For example the upper case Sigma Σ0 ("sum") from Section 4.1.3 of the
+FIPS 180-4 specification is split into low and high halves in
+[rv32_sha512.c](rv32_sha512.c) as follows:
+```C
+uint32_t sha512_sum0l(uint32_t rs1, uint32_t rs2)
+{
+    uint64_t t = ((uint64_t) rs1) | (((uint64_t) rs2) << 32);
+    t = (rvb_rorw(t, 28) ^ rvb_rorw(t, 34) ^ rvb_rorw(t, 39));
+    return (uint32_t) t;
+}
+
+uint32_t sha512_sum0h(uint32_t rs1, uint32_t rs2)
+{
+    uint64_t t = ((uint64_t) rs1) | (((uint64_t) rs2) << 32);
+    t = (rvb_rorw(t, 28) ^ rvb_rorw(t, 34) ^ rvb_rorw(t, 39));
+    return (uint32_t) (t >> 32);
+}
+```
+The entire compression function state of 64 + 128 = 192 bytes no longer
+fits into the register file; we choose to perform loads and stores on the
+message extension. Anyway, the number of loads and stores greatly increases
+in this variant.
+
+So essentially the arithmetic instruction counts are doubled in relation
+tor the 64-bit wide SHA-512, except that each ADD becomes four instructions;
+three 32-bit ADDs and one SLTU.
+
+| **Type**  | **K** | **R** | 64×K+80×R   |
+|----------:|------:|------:|----------:|
+| ADD       |   9   |   21  |   2256    |
+| SLTU      |   3   |   7   |   752     |
+| AND       |   0   |   6   |   480     |
+| ANDN      |   0   |   2   |   160     |
+| OR        |   0   |   4   |   320     |
+| SHAx_y    |   4   |   4   |   576     |
+| **Total** |   19  |   51  | **4544**  |
+
+Note that if the 64-bit addition is hypothetically instead split into two
+instructions, a 32-bit ADD (that sets the carry flag) and a 32-bit "ADC"
+(add with carry) then the total instruction count comes down 17% to 3792.
+
 
 ##  SM3
 
-The file [temp_sm3.c](temp_sm3.c) contains our initial exploration of the
-Chinese Hash function [SM3](doc/sm3-ch.pdf) [english](doc/sm3-en.pdf)
-(GB/T 32905-2016, GM/T 0004-2012, ISO/IEC 10118-3:2018). Currently we
-can not recommend any specific lightweight instructions that would be
-particularly helpful for it.
+The file [rv32_sm3.c](rv32_sm3.c) contains our initial exploration of the
+compression function of Chinese Hash function [SM3](doc/sm3-ch.pdf)
+[eng](doc/sm3-en.pdf) (GB/T 32905-2016, GM/T 0004-2012, ISO/IEC 10118-3:2018).
+We also provide rudimentary instantiation in [sm3.c](sm3.c) and unit test in
+[test_sm3.c](test_sm3.c).
 
 Observations:
 
-*   The external structure of SM3 is very similar to SHA-256; It is possible
-    to perform the entire compression function iteration without stack
-    loads and stores here as well.
+*   The external structure and padding mode of SM3 is very
+    similar to SHA-256; It is possible to perform the entire compression
+    function iteration without stack loads and stores here as well.
 *   Gains from RORI are very high as the algorithm is highly dependent
     on rotations.
 *   The message expansion LFSR is much denser than that of SHA-256, which is
     the main factor increasing the overall instruction count.
 *   A straight-forward implementation does not have timing issues.
 
-Using a subset of bitmanip we observe from [temp_sm3.c](temp_sm3.c):
-Key steps K have 4 × RORI, 6 × XOR = 10 (completely linear).
-Round 0..15 step R0 has 8 × ADD, 7 × RORI , 8 × XOR = 23 (it's entirely ARX!)
-Round 16..64 step R1 has 8 × ADD, 7 × RORI, 5 × XOR, 3 × AND, 2 × OR, 1 × ANDN = 26
-
-There are 52 K steps, 16 R0 steps, and 48 R1 steps, so 2136 total for the compression function sans looping and input/output loads.
-
-The best single instruction I could come up with was a special instruction
-related to P1 permutation that would combine 3 RORIs and 3 XORs in K step:
+We are currently experimenting with two special instructions that implement
+the P0 and P1 permutations (Section 4.4 of the specification, where these
+mirror functions are expressed via left rotations):
 ```C
-uint32_t sm3p1(uint32_t rs1, uint32_t rs2)
+uint32_t sm3_p0(uint32_t rs1)
 {
-    return rs1 ^ rvb_ror(rs1,  9) ^ rvb_ror(rs1, 17) ^ rvb_ror(rs2, 25);
+    return rs1 ^ rvb_ror(rs1, 15) ^ rvb_ror(rs1, 23);
+}
+
+uint32_t sm3_p1(uint32_t rs1)
+{
+    return rs1 ^ rvb_ror(rs1, 9) ^ rvb_ror(rs1, 17);
 }
 ```
-would save 208 instructions only (roughly 10%). Even with multiple such
-things (one for P0 etc) the gains are under 50%.
+The also uses RORI and ANDN from Bitmanip.
+
+I'm dividing the arithmetic ops in SM3 as keying steps 52 × K,
+initial round steps 16 × R0, and main round steps 48 × R1.
+
+| **Type**  | K | ×52  | R0 | ×16 | R1 | ×48 | **Total** |
+|----------:|--:|------:|---:|-----:|---:|-----:|----------:|
+| ADD       | 0 | 0     | 8  | 128  | 8  | 384  | 512       |
+| XOR       | 4 | 208   | 6  | 96   | 3  | 144  | 448       |
+| AND       | 0 | 0     | 0  | 0    | 3  | 144  | 144       |
+| ANDN      | 0 | 0     | 0  | 0    | 1  | 48   | 48        |
+| OR        | 0 | 0     | 0  | 0    | 2  | 96   | 96        |
+| RORI      | 2 | 104   | 5  | 80   | 5  | 240  | 424       |
+| SM3_P0    | 0 | 0     | 1  | 16   | 1  | 48   | 64        |
+| SM3_P1    | 1 | 52    | 0  | 0    | 0  | 0    | 52        |
+| **Total** | 7 | 364   | 20 | 320  | 23 | 1104 | **1788**  |
+
+We obtain 1788 total arithmetic ops for the compression function
+sans looping and input/output loads.
+
+Without the SM3_P0 and SM3_P1 instructions K, R1, R2 require
+2 XORs and 2 RORIs more, bringing the total to 2136; the instructions
+seem to offer much less than 20% speed-up over base Bitmanip (which is
+needed anyway), so there is no strong motivation to have them.
 
 ####
 
