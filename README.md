@@ -128,7 +128,7 @@ We have:
     compression function on RV64.
 
 For both of these implementations the state is 8 words and each message
-block is 16 words in both cases so these fit nicely in the register file.
+block is 16 words so 24 words fit nicely in the register file.
 
 There are two kinds of steps; message scheduling steps K and rounds R.
 SHA2-224/256 has 48 × K steps and 64 × R steps while SHA2-384/512 has
@@ -243,17 +243,17 @@ The also uses RORI and ANDN from Bitmanip.
 I'm dividing the arithmetic ops in SM3 as keying steps 52 × K,
 initial round steps 16 × R0, and main round steps 48 × R1.
 
-| **Type**  | K | ×52  | R0 | ×16 | R1 | ×48 | **Total** |
-|----------:|--:|------:|---:|-----:|---:|-----:|----------:|
-| ADD       | 0 | 0     | 8  | 128  | 8  | 384  | 512       |
-| XOR       | 4 | 208   | 6  | 96   | 3  | 144  | 448       |
-| AND       | 0 | 0     | 0  | 0    | 3  | 144  | 144       |
-| ANDN      | 0 | 0     | 0  | 0    | 1  | 48   | 48        |
-| OR        | 0 | 0     | 0  | 0    | 2  | 96   | 96        |
-| RORI      | 2 | 104   | 5  | 80   | 5  | 240  | 424       |
-| SM3_P0    | 0 | 0     | 1  | 16   | 1  | 48   | 64        |
-| SM3_P1    | 1 | 52    | 0  | 0    | 0  | 0    | 52        |
-| **Total** | 7 | 364   | 20 | 320  | 23 | 1104 | **1788**  |
+| **Type**  |   K   |   R0  |   R1  | 52×K+16×R0+48×R1 |
+|----------:|------:|------:|------:|------------:|
+| ADD       |   0   |   8   |   8   |   512       |
+| XOR       |   4   |   6   |   3   |   448       |
+| AND       |   0   |   0   |   3   |   144       |
+| ANDN      |   0   |   0   |   1   |   48        |
+| OR        |   0   |   0   |   2   |   96        |
+| RORI      |   2   |   5   |   5   |   424       |
+| SM3_P0    |   0   |   1   |   1   |   64        |
+| SM3_P1    |   1   |   0   |   0   |   52        |
+| **Total** |   7   |   20  |   23  |   **1788**  |
 
 We obtain 1788 total arithmetic ops for the compression function
 sans looping and input/output loads.
