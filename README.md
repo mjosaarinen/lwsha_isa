@@ -260,8 +260,9 @@ sans looping and input/output loads.
 
 Without the SM3_P0 and SM3_P1 instructions K, R1, R2 require
 2 XORs and 2 RORIs more, bringing the total to 2136; the instructions
-seem to offer much less than 20% speed-up over base Bitmanip (which is
-needed anyway), so there is no strong motivation to have them.
+seem to offer less than 20% speed-up over base Bitmanip (which is
+needed anyway). However it can be seen that these instructions are
+structurally equivalent to the SHA256 Sigma functions above.
 
 ####
 
