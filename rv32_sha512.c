@@ -4,12 +4,19 @@
 
 //  FIPS 180-4 SHA2-384/512 compression function for RV64
 
+#include <string.h>
+
 #include "sha2.h"
 
 //  bitmanip (emulation) prototypes here
 #include "bitmanip.h"
 
-#include <string.h>
+//  RV32I base SLTU emulation
+
+uint32_t rv32_sltu(uint32_t rs1, uint32_t rs2)
+{
+	return rs1 < rs2 ? 1 : 0;
+}
 
 //  4.1.3 SHA-384, SHA-512, SHA-512/224 and SHA-512/256 Functions
 //  these four are intended as ISA extensions
@@ -74,12 +81,6 @@ uint32_t sha512_sig1h(uint32_t rs1, uint32_t rs2)
 	return (uint32_t) (t >> 32);
 }
 
-uint32_t rv32_sltu(uint32_t rs1, uint32_t rs2)
-{
-	return rs1 < rs2 ? 1 : 0;
-}
-
-
 //  (((a | c) & b) | (c & a)) = Maj(a, b, c)
 //  ((e & f) ^ rvb_andn(g, e)) = Ch(e, f, g)
 
@@ -89,7 +90,7 @@ uint32_t rv32_sltu(uint32_t rs1, uint32_t rs2)
 	dl = s1l + s2l;							\
 	dh = s1h + s2h + rv32_sltu(dl, s2l);	}
 
-//  
+//  final Merkle-Damgard addition
 
 #define LSADD64(p0, p1, xl, xh) 	{	\
 	tl = p0 + xl;						\
