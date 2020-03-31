@@ -25,10 +25,10 @@ those tests on most Linux type PCs without any special hardware or software
 (you may have to adjust `Makefile`).
 
 The main purpose of this work is to facilitate quantitative analysis such
-as instruction counts. We focus on the core iterations parts: the
+as instruction counts. We focus on the core iterations: the
 Keccak-p permutation for SHA-3 and the two SHA-2 compression functions
 (one for SHA2-225/256 and another for SHA2-384/512). Some preliminary
-investigations have also been made with the Chinese SM3 standard hash.
+investigations have also been made with the Chinese SM3 hash standard.
 
 This work is related to the following RISC-V Extension profiles which
 are also works in progress.
