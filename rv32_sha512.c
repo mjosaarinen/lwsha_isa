@@ -22,64 +22,49 @@ uint32_t rv32_sltu(uint32_t rs1, uint32_t rs2)
 //  these four are intended as ISA extensions
 
 //  upper case sigma0, sigma1 is "sum"
+//  ( high word can be obtained by flipping the input words )
 
 uint32_t sha512_sum0l(uint32_t rs1, uint32_t rs2)
 {
-	uint64_t t = ((uint64_t) rs1) | (((uint64_t) rs2) << 32);
-	t = (rvb_rorw(t, 28) ^ rvb_rorw(t, 34) ^ rvb_rorw(t, 39));
-	return (uint32_t) t;
-}
-
-uint32_t sha512_sum0h(uint32_t rs1, uint32_t rs2)
-{
-	uint64_t t = ((uint64_t) rs1) | (((uint64_t) rs2) << 32);
-	t = (rvb_rorw(t, 28) ^ rvb_rorw(t, 34) ^ rvb_rorw(t, 39));
-	return (uint32_t) (t >> 32);
+	return (rs1 << 25) ^ (rs1 << 30) ^ (rs1 >> 28) ^
+		(rs2 << 4) ^ (rs2 >> 2) ^ (rs2 >> 7);
 }
 
 uint32_t sha512_sum1l(uint32_t rs1, uint32_t rs2)
 {
-	uint64_t t = ((uint64_t) rs1) | (((uint64_t) rs2) << 32);
-	t = rvb_rorw(t, 14) ^ rvb_rorw(t, 18) ^ rvb_rorw(t, 41);
-	return (uint32_t) t;
+	return (rs1 << 23) ^ (rs1 >> 14) ^ (rs1 >> 18) ^
+		(rs2 << 14) ^ (rs2 << 18) ^ (rs2 >> 9);
 }
 
-uint32_t sha512_sum1h(uint32_t rs1, uint32_t rs2)
-{
-	uint64_t t = ((uint64_t) rs1) | (((uint64_t) rs2) << 32);
-	t = rvb_rorw(t, 14) ^ rvb_rorw(t, 18) ^ rvb_rorw(t, 41);
-	return (uint32_t) (t >> 32);
-}
-
-//  lower case sigma0, sigma1 is "sig"
+//  lower case sigma0, sima1 is "sig"
 
 uint32_t sha512_sig0l(uint32_t rs1, uint32_t rs2)
 {
-	uint64_t t = ((uint64_t) rs1) | (((uint64_t) rs2) << 32);
-	t = rvb_rorw(t, 1) ^ rvb_rorw(t, 8) ^ (t >> 7);
-	return (uint32_t) t;
+	return (rs1 >> 1) ^ (rs1 >> 7) ^ (rs1 >> 8) ^
+		(rs2 << 24) ^ (rs2 << 25) ^ (rs2 << 31);
 }
+
+//  high word ( otherwise same but left shift 25 is missing )
 
 uint32_t sha512_sig0h(uint32_t rs1, uint32_t rs2)
 {
-	uint64_t t = ((uint64_t) rs1) | (((uint64_t) rs2) << 32);
-	t = rvb_rorw(t, 1) ^ rvb_rorw(t, 8) ^ (t >> 7);
-	return (uint32_t) (t >> 32);
+	return (rs1 >> 1) ^ (rs1 >> 7) ^ (rs1 >> 8) ^ (rs2 << 24) ^ (rs2 << 31);
 }
 
 uint32_t sha512_sig1l(uint32_t rs1, uint32_t rs2)
 {
-	uint64_t t = ((uint64_t) rs1) | (((uint64_t) rs2) << 32);
-	t = rvb_rorw(t, 19) ^ rvb_rorw(t, 61) ^ (t >> 6);
-	return (uint32_t) t;
+	return (rs1 << 3) ^ (rs1 >> 6) ^ (rs1 >> 19) ^
+		(rs2 << 13) ^ (rs2 << 26) ^ (rs2 >> 29);
 }
+
+//  high word ( otherwise same but left shift 26 is missing )
 
 uint32_t sha512_sig1h(uint32_t rs1, uint32_t rs2)
 {
-	uint64_t t = ((uint64_t) rs1) | (((uint64_t) rs2) << 32);
-	t = rvb_rorw(t, 19) ^ rvb_rorw(t, 61) ^ (t >> 6);
-	return (uint32_t) (t >> 32);
+	return (rs1 << 3) ^ (rs1 >> 6) ^ (rs1 >> 19) ^ (rs2 << 13) ^ (rs2 >> 29);
 }
+
+
 
 //  (((a | c) & b) | (c & a)) = Maj(a, b, c)
 //  ((e & f) ^ rvb_andn(g, e)) = Ch(e, f, g)
@@ -105,10 +90,10 @@ uint32_t sha512_sig1h(uint32_t rs1, uint32_t rs2)
 	uh = mp[(i + 19) & 0x1F];										\
 	ADD64(tl, th, tl, th, ul, uh);									\
 	ul = sha512_sig0l(mp[(i + 2) & 0x1F], mp[(i + 3) & 0x1F]);		\
-	uh = sha512_sig0h(mp[(i + 2) & 0x1F], mp[(i + 3) & 0x1F]);		\
+	uh = sha512_sig0h(mp[(i + 3) & 0x1F], mp[(i + 2) & 0x1F]);		\
 	ADD64(tl, th, tl, th, ul, uh);									\
 	ul = sha512_sig1l(mp[(i + 28) & 0x1F], mp[(i + 29) & 0x1F]);	\
-	uh = sha512_sig1h(mp[(i + 28) & 0x1F], mp[(i + 29) & 0x1F]);	\
+	uh = sha512_sig1h(mp[(i + 29) & 0x1F], mp[(i + 28) & 0x1F]);	\
 	ADD64(tl, th, tl, th, ul, uh);									\
 	mp[i] = tl;														\
 	mp[i + 1] = th;													}
@@ -125,11 +110,11 @@ uint32_t sha512_sig1h(uint32_t rs1, uint32_t rs2)
 	th = (x9 & xb) ^ rvb_andn(xd, x9);					\
 	ADD64(xe, xf, xe, xf, tl, th);						\
 	tl = sha512_sum1l(x8, x9);							\
-	th = sha512_sum1h(x8, x9);							\
+	th = sha512_sum1l(x9, x8);							\
 	ADD64(xe, xf, xe, xf, tl, th);						\
 	ADD64(x6, x7, x6, x7, xe, xf);						\
 	tl = sha512_sum0l(x0, x1);							\
-	th = sha512_sum0h(x0, x1);							\
+	th = sha512_sum0l(x1, x0);							\
 	ADD64(xe, xf, xe, xf, tl, th);						\
 	tl = (((x0 | x4) & x2) | (x4 & x0));				\
 	th = (((x1 | x5) & x3) | (x5 & x1));				\

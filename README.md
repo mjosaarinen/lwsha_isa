@@ -159,28 +159,47 @@ compression function on RV32 and is much more complicated than the
 two other versions. The large number of 64-bit additions will result in
 a lot of SLTUs because RISC-V has no carry flag. Those additions
 also make the interleaving technique used for SHA-3 unusable. However
-splitting the "Sum" and "Sigma" operations into eight single-operand
+splitting the "Sum" and "Sigma" operations into six double-operand
 instructions, each a linear operation with two 32-bit inputs removes
 the need to emulate 64-bit shifts.
 
 For example the upper case Sigma Σ0 ("sum") from Section 4.1.3 of the
-FIPS 180-4 specification is split into low and high halves in
+FIPS 180-4 specification is split into low halves in
 [rv32_sha512.c](rv32_sha512.c) as follows:
 ```C
-uint32_t sha512_sum0l(uint32_t rs1, uint32_t rs2)
-{
-    uint64_t t = ((uint64_t) rs1) | (((uint64_t) rs2) << 32);
-    t = (rvb_rorw(t, 28) ^ rvb_rorw(t, 34) ^ rvb_rorw(t, 39));
-    return (uint32_t) t;
-}
+//  upper case sigma0, sigma1 is "sum"
+//  ( high word can be obtained by flipping the input words )
 
-uint32_t sha512_sum0h(uint32_t rs1, uint32_t rs2)
-{
-    uint64_t t = ((uint64_t) rs1) | (((uint64_t) rs2) << 32);
-    t = (rvb_rorw(t, 28) ^ rvb_rorw(t, 34) ^ rvb_rorw(t, 39));
-    return (uint32_t) (t >> 32);
+uint32_t sha512_sum0l(uint32_t rs1, uint32_t rs2)
+    return  (rs1 << 25) ^ (rs1 << 30) ^ (rs1 >> 28) ^
+            (rs2 <<  4) ^ (rs2 >>  2) ^ (rs2 >>  7);
 }
 ```
+What is noteworthy is that the high word can be computed by flipping
+the input operands. This is because Σ0 and Σ1 are entirely made up
+of rotations and XORs.
+
+However this is not possible for σ0 and σ1 as they have rotations
+and a shift. For the high word instructions we flip the order
+of input words to rs1=high, rs2=low so that the same data paths can
+be used. This brings the total number of SHA2-512 instructions on RV32
+to six.
+```C
+//  lower case sigma 0 low word
+uint32_t sha512_sig0l(uint32_t rs1, uint32_t rs2)
+{
+    return  (rs1 >>  1) ^ (rs1 >>  7) ^ (rs1 >>  8) ^
+            (rs2 << 24) ^ (rs2 << 25) ^ (rs2 << 31);
+}
+
+//  high word ( otherwise same but left shift 25 is missing )
+uint32_t sha512_sig0h(uint32_t rs1, uint32_t rs2)
+{
+    return  (rs1 >>  1) ^ (rs1 >>  7) ^ (rs1 >> 8) ^
+            (rs2 << 24) ^ (rs2 << 31);
+}
+```
+
 The entire compression function state of 64 + 128 = 192 bytes no longer
 fits into the register file; we choose to perform loads and stores on the
 message extension. Anyway, the number of loads and stores greatly increases
