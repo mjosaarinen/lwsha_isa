@@ -152,7 +152,7 @@ Note that we are ignoring the operations required for endianess, padding, and
 Merkle-Damgård addition here.
 
 
-##  SHA2-512 on RV32; Where things get Hairy
+##  SHA2-512 on RV32
 
 [rv32_sha512.c](rv32_sha512.c) is an implementation of the SHA2-384/512
 compression function on RV32 and is much more complicated than the
