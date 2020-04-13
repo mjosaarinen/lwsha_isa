@@ -19,10 +19,10 @@ uint32_t rv32_sltu(uint32_t rs1, uint32_t rs2)
 }
 
 //  4.1.3 SHA-384, SHA-512, SHA-512/224 and SHA-512/256 Functions
-//  these four are intended as ISA extensions
+//	These six instructions are the ISA Extension proposal.
 
-//  low word of Sigma0, Sigma1 ("sum") of (rs2_rs1)
-//  ( high word can be obtained by flipping the input words )
+//  low word of Sigma0 ("sum0") x=rs2_rs1: (x >>> 28) ^ (x >>> 34) ^ (x >>> 39)
+//  ( high word can be obtained by flipping the input words x=rs1_rs2 )
 
 uint32_t sha512_sum0l(uint32_t rs1, uint32_t rs2)
 {
@@ -30,13 +30,16 @@ uint32_t sha512_sum0l(uint32_t rs1, uint32_t rs2)
 			(rs2 >>  7) ^ (rs2 >>  2) ^	(rs2 <<  4);
 }
 
+//  low word of Sigma1 ("sum1") x=rs2_rs1: (x >>> 14) ^ (x >>> 18) ^ (x >>> 41)
+//  ( high word can be obtained by flipping the input words x=rs1_rs2 )
+
 uint32_t sha512_sum1l(uint32_t rs1, uint32_t rs2)
 {
 	return 	(rs1 << 23) ^ (rs1 >> 14) ^ (rs1 >> 18) ^
 			(rs2 >>  9) ^ (rs2 << 18) ^ (rs2 << 14);
 }
 
-//  lower case sigma0, sima1 is "sig". low word of (rs2_rs1)
+//  low word of sigma0 ("sig0") x=rs2_rs1 : (x >>> 1) ^ (x >>> 8) ^ (x >> 7)
 
 uint32_t sha512_sig0l(uint32_t rs1, uint32_t rs2)
 {
@@ -44,7 +47,7 @@ uint32_t sha512_sig0l(uint32_t rs1, uint32_t rs2)
 			(rs2 << 31) ^ (rs2 << 25) ^ (rs2 << 24);
 }
 
-//  high word of (rs1_rs2) ( otherwise same but left shift 25 is missing )
+//  high word of sigma0 x=rs1_rs2 ( same but left shift 25 is missing )
 
 uint32_t sha512_sig0h(uint32_t rs1, uint32_t rs2)
 {
@@ -52,7 +55,7 @@ uint32_t sha512_sig0h(uint32_t rs1, uint32_t rs2)
 			(rs2 << 31) ^ 				(rs2 << 24);
 }
 
-//	low word of sig1 of (rs2_rs1)
+//  low word of sigma1 ("sig") x=rs2_rs1: (x >>> 19) ^ (x >>> 61) ^ (x >> 6)
 
 uint32_t sha512_sig1l(uint32_t rs1, uint32_t rs2)
 {
@@ -60,7 +63,7 @@ uint32_t sha512_sig1l(uint32_t rs1, uint32_t rs2)
 			(rs2 >> 29) ^ (rs2 << 26) ^ (rs2 << 13);
 }
 
-//  high word of (rs1_rs2) ( otherwise same but left shift 26 is missing )
+//  high word of sigma1 x=rs1_rs2 ( same but left shift 26 is missing )
 
 uint32_t sha512_sig1h(uint32_t rs1, uint32_t rs2)
 {

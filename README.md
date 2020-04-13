@@ -167,11 +167,17 @@ For example the 64-bit Σ0 and Σ1 functions (upper case Sigma; "sum") from
 Section 4.1.3 of FIPS 180-4 are split into half using shifts in
 [rv32_sha512.c](rv32_sha512.c) as follows:
 ```C
+//  low word of Sigma0 ("sum0") x=rs2_rs1: (x >>> 28) ^ (x >>> 34) ^ (x >>> 39)
+//  ( high word can be obtained by flipping the input words with x=rs1_rs2 )
+
 uint32_t sha512_sum0l(uint32_t rs1, uint32_t rs2)
 {
     return  (rs1 << 25) ^ (rs1 << 30) ^ (rs1 >> 28) ^
             (rs2 >>  7) ^ (rs2 >>  2) ^ (rs2 <<  4);
 }
+
+//  low word of Sigma1 ("sum1") x=rs2_rs1: (x >>> 14) ^ (x >>> 18) ^ (x >>> 41)
+//  ( high word can be obtained by flipping the input words with x=rs1_rs2 )
 
 uint32_t sha512_sum1l(uint32_t rs1, uint32_t rs2)
 {
@@ -187,16 +193,18 @@ However this is not possible for σ0 and σ1 as they have rotations
 and a shift. For the high word instructions we flip the order
 of input words to rs1=high, rs2=low so that the same data paths can
 be used. This brings the total number of SHA2-512 instructions on RV32
-to six.
+to six. For example, low and high words of σ0 are:
 ```C
-//  lower case sigma0, sima1 is "sig". low word of (rs2_rs1)
+//  low word of sigma0 ("sig0") x=rs2_rs1 : (x >>> 1) ^ (x >>> 8) ^ (x >> 7)
+
 uint32_t sha512_sig0l(uint32_t rs1, uint32_t rs2)
 {
     return  (rs1 >>  1) ^ (rs1 >>  7) ^ (rs1 >>  8) ^
             (rs2 << 31) ^ (rs2 << 25) ^ (rs2 << 24);
 }
 
-//  high word of (rs1_rs2) ( otherwise same but left shift 25 is missing )
+//  high word of sigma0 x=rs1_rs2 ( same but left shift 25 is missing )
+
 uint32_t sha512_sig0h(uint32_t rs1, uint32_t rs2)
 {
     return  (rs1 >>  1) ^ (rs1 >>  7) ^ (rs1 >>  8) ^
