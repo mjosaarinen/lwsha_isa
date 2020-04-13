@@ -21,49 +21,52 @@ uint32_t rv32_sltu(uint32_t rs1, uint32_t rs2)
 //  4.1.3 SHA-384, SHA-512, SHA-512/224 and SHA-512/256 Functions
 //  these four are intended as ISA extensions
 
-//  upper case sigma0, sigma1 is "sum"
+//  low word of Sigma0, Sigma1 ("sum") of (rs2_rs1)
 //  ( high word can be obtained by flipping the input words )
 
 uint32_t sha512_sum0l(uint32_t rs1, uint32_t rs2)
 {
-	return (rs1 << 25) ^ (rs1 << 30) ^ (rs1 >> 28) ^
-		(rs2 << 4) ^ (rs2 >> 2) ^ (rs2 >> 7);
+	return  (rs1 << 25) ^ (rs1 << 30) ^ (rs1 >> 28) ^
+			(rs2 >>  7) ^ (rs2 >>  2) ^	(rs2 <<  4);
 }
 
 uint32_t sha512_sum1l(uint32_t rs1, uint32_t rs2)
 {
-	return (rs1 << 23) ^ (rs1 >> 14) ^ (rs1 >> 18) ^
-		(rs2 << 14) ^ (rs2 << 18) ^ (rs2 >> 9);
+	return 	(rs1 << 23) ^ (rs1 >> 14) ^ (rs1 >> 18) ^
+			(rs2 >>  9) ^ (rs2 << 18) ^ (rs2 << 14);
 }
 
-//  lower case sigma0, sima1 is "sig"
+//  lower case sigma0, sima1 is "sig". low word of (rs2_rs1)
 
 uint32_t sha512_sig0l(uint32_t rs1, uint32_t rs2)
 {
-	return (rs1 >> 1) ^ (rs1 >> 7) ^ (rs1 >> 8) ^
-		(rs2 << 24) ^ (rs2 << 25) ^ (rs2 << 31);
+	return 	(rs1 >>  1) ^ (rs1 >>  7) ^ (rs1 >>  8) ^
+			(rs2 << 31) ^ (rs2 << 25) ^ (rs2 << 24);
 }
 
-//  high word ( otherwise same but left shift 25 is missing )
+//  high word of (rs1_rs2) ( otherwise same but left shift 25 is missing )
 
 uint32_t sha512_sig0h(uint32_t rs1, uint32_t rs2)
 {
-	return (rs1 >> 1) ^ (rs1 >> 7) ^ (rs1 >> 8) ^ (rs2 << 24) ^ (rs2 << 31);
+	return 	(rs1 >>  1) ^ (rs1 >>  7) ^ (rs1 >>  8) ^
+			(rs2 << 31) ^ 				(rs2 << 24);
 }
+
+//	low word of sig1 of (rs2_rs1)
 
 uint32_t sha512_sig1l(uint32_t rs1, uint32_t rs2)
 {
-	return (rs1 << 3) ^ (rs1 >> 6) ^ (rs1 >> 19) ^
-		(rs2 << 13) ^ (rs2 << 26) ^ (rs2 >> 29);
+	return 	(rs1 <<  3) ^ (rs1 >>  6) ^ (rs1 >> 19) ^
+			(rs2 >> 29) ^ (rs2 << 26) ^ (rs2 << 13);
 }
 
-//  high word ( otherwise same but left shift 26 is missing )
+//  high word of (rs1_rs2) ( otherwise same but left shift 26 is missing )
 
 uint32_t sha512_sig1h(uint32_t rs1, uint32_t rs2)
 {
-	return (rs1 << 3) ^ (rs1 >> 6) ^ (rs1 >> 19) ^ (rs2 << 13) ^ (rs2 >> 29);
+	return	(rs1 <<  3)	^ (rs1 >>  6) ^	(rs1 >> 19) ^
+			(rs2 >> 29)	^ 				(rs2 << 13);
 }
-
 
 
 //  (((a | c) & b) | (c & a)) = Maj(a, b, c)
