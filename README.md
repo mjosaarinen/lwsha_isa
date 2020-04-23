@@ -54,7 +54,7 @@ cache-timing attacks, which is not an issue for any of them.
 
 The SHA-3 implementations utilize a subset of bitmanip instructions only,
 which are emulated by functions in [bitmanip.c](bitmanip.c). The file
-[sha3_wrap.c](sha3_wrap.c) provides padding testing wrappers and is used by 
+[sha3_wrap.c](sha3_wrap.c) provides padding testing wrappers and is used by
 the unit tests in [sha3_test.c](sha3_test.c). These are not been subjected
 to  optimization.
 
@@ -64,13 +64,13 @@ this 1600-bit, 24-round keyless permutation that is the foundation of all
 current permutation-based NIST cryptography (even beyond FIPS 202).
 
 * [sha3_rv64_keccakp.c](sha3_rv64_keccakp.c) is an RV64 implementation that
-	uses (per round) 76 × XOR, 29 × RORIW, and 25 × ANDN, and few auxiliary
+    uses (per round) 76 × XOR, 29 × RORIW, and 25 × ANDN, and few auxiliary
     ops for loading a round constant and looping.
     The 1600-bit state and temporary registers fit into the register file,
     although a C compiler may not be able to do that.
 * [sha3_rv32_keccakp.c](sha3_rv32_keccakp.c) is an RV32 implementation that
-	uses the even/odd bit interleaving technique; this is accomplished with
-	the help of bitmanip SHFL and UNSHFL instructions -- however these are
+    uses the even/odd bit interleaving technique; this is accomplished with
+    the help of bitmanip SHFL and UNSHFL instructions -- however these are
     outside the main loop and not really critical.
     The benefit inside the main loop is that each 64-bit rotation can be
     implemented with one or two independent 32-bit rotations. We have
@@ -88,7 +88,7 @@ boost, but the main advantage is really the large register file.
 
 The SHA-2 code explores the use of special instructions for "Scalar SHA2
 Acceleration", which offer to accelerate all SHA2 algorithms on RV64 and
-SHA2-224/256 on RV32.  The file [sha2_wrap.c](sha2_wrap.c) provides padding 
+SHA2-224/256 on RV32.  The file [sha2_wrap.c](sha2_wrap.c) provides padding
 testing wrappers and is used by the unit tests in [sha2_test.c](sha2_test.c).
 
 These instructions implement the "sigma functions" defined in Sections
@@ -123,10 +123,10 @@ uint32_t sha256_sig1(uint32_t rs1)
 We have:
 
 *   [sha2_rv32_cf256.c](sha2_rv32_cf256.c) is an implementation of the
-	SHA2-224/256 compression function on RV32 (the RV64 implementation is
-	probably equivalent).
+    SHA2-224/256 compression function on RV32 (the RV64 implementation is
+    probably equivalent).
 *   [sha2_rv64_cf512.c](sha2_rv64_cf512.c) is an implementation of the
-	SHA2-384/512 compression function on RV64.
+    SHA2-384/512 compression function on RV64.
 
 For both of these implementations the state is 8 words and each message
 block is 16 words so 24 words fit nicely in the register file.
