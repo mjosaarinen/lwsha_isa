@@ -54,22 +54,23 @@ cache-timing attacks, which is not an issue for any of them.
 
 The SHA-3 implementations utilize a subset of bitmanip instructions only,
 which are emulated by functions in [bitmanip.c](bitmanip.c). The file
-[sha3.c](sha3.c) provides padding testing wrappers and is used by the unit
-tests in [test_sha3.c](test_sha3.c). These are not subject to optimization.
+[sha3_wrap.c](sha3_wrap.c) provides padding testing wrappers and is used by 
+the unit tests in [sha3_test.c](sha3_test.c). These are not been subjected
+to  optimization.
 
 The cryptographic permutation Keccak-p is used via a function pointer
 `void (*sha3_keccakp)(void *)` which must be set to an implementation of
 this 1600-bit, 24-round keyless permutation that is the foundation of all
 current permutation-based NIST cryptography (even beyond FIPS 202).
 
-* [rv64_keccakp.c](rv64_keccakp.c) is an RV64 implementation that uses
-    (per round) 76 × XOR, 29 × RORIW, and 25 × ANDN, and few auxiliary
+* [sha3_rv64_keccakp.c](sha3_rv64_keccakp.c) is an RV64 implementation that
+	uses (per round) 76 × XOR, 29 × RORIW, and 25 × ANDN, and few auxiliary
     ops for loading a round constant and looping.
     The 1600-bit state and temporary registers fit into the register file,
     although a C compiler may not be able to do that.
-* [rv32_keccakp.c](rv32_keccakp.c) is an RV32 implementation that uses
-    the even/odd bit interleaving technique; this is accomplished with the
-    help of bitmanip SHFL and UNSHFL instructions -- however these are
+* [sha3_rv32_keccakp.c](sha3_rv32_keccakp.c) is an RV32 implementation that
+	uses the even/odd bit interleaving technique; this is accomplished with
+	the help of bitmanip SHFL and UNSHFL instructions -- however these are
     outside the main loop and not really critical.
     The benefit inside the main loop is that each 64-bit rotation can be
     implemented with one or two independent 32-bit rotations. We have
@@ -87,8 +88,8 @@ boost, but the main advantage is really the large register file.
 
 The SHA-2 code explores the use of special instructions for "Scalar SHA2
 Acceleration", which offer to accelerate all SHA2 algorithms on RV64 and
-SHA2-224/256 on RV32.  The file [sha2.c](sha2.c) provides padding testing
-wrappers and is used by the unit tests in [test_sha2.c](test_sha2.c).
+SHA2-224/256 on RV32.  The file [sha2_wrap.c](sha2_wrap.c) provides padding 
+testing wrappers and is used by the unit tests in [sha2_test.c](sha2_test.c).
 
 These instructions implement the "sigma functions" defined in Sections
 4.1.2 and 4.1.3 of FIPS 180-4. By convention, I'll write the upper case
@@ -121,11 +122,11 @@ uint32_t sha256_sig1(uint32_t rs1)
 
 We have:
 
-*   [rv32_sha256.c](rv32_sha256.c) is an implementation of the SHA2-224/256
-    compression function on RV32 (the RV64 implementation is probably
-    equivalent).
-*   [rv64_sha512.c](rv64_sha512.c) is an implementation of the SHA2-384/512
-    compression function on RV64.
+*   [sha2_rv32_cf256.c](sha2_rv32_cf256.c) is an implementation of the
+	SHA2-224/256 compression function on RV32 (the RV64 implementation is
+	probably equivalent).
+*   [sha2_rv64_cf512.c](sha2_rv64_cf512.c) is an implementation of the
+	SHA2-384/512 compression function on RV64.
 
 For both of these implementations the state is 8 words and each message
 block is 16 words so 24 words fit nicely in the register file.
@@ -154,8 +155,8 @@ Merkle-Damgård addition here.
 
 ##  SHA2-512 on RV32
 
-[rv32_sha512.c](rv32_sha512.c) is an implementation of the SHA2-384/512
-compression function on RV32 and is more complicated than the
+[sha2_rv32_cf512.c](sha2_rv32_cf512.c) is an implementation of the
+SHA2-384/512 compression function on RV32 and is more complicated than the
 two other versions. The large number of 64-bit additions will result in
 a lot of SLTUs because RISC-V has no carry flag. Those additions
 also make the interleaving technique used for SHA-3 unusable. However
@@ -164,8 +165,7 @@ instructions (each a linear operation with two 32-bit inputs) gives a
 reasonable performance boost.
 
 For example the 64-bit Σ0 and Σ1 functions (upper case Sigma; "sum") from
-Section 4.1.3 of FIPS 180-4 are split into half using shifts in
-[rv32_sha512.c](rv32_sha512.c) as follows:
+Section 4.1.3 of FIPS 180-4 are split into half using shifts in as follows:
 ```C
 //  low word of Sigma0 ("sum0") x=rs2_rs1: (x >>> 28) ^ (x >>> 34) ^ (x >>> 39)
 //  ( high word can be obtained by flipping the input words with x=rs1_rs2 )
@@ -238,11 +238,11 @@ instructions, a 32-bit ADD (that sets the carry flag) and a 32-bit "ADC"
 
 ##  SM3
 
-The file [rv32_sm3.c](rv32_sm3.c) contains our initial exploration of the
+The file [sm3_rv32_cf.c](sm3_rv32_cf.c) contains our initial exploration of the
 compression function of Chinese Hash function [SM3](doc/sm3-ch.pdf)
 [eng](doc/sm3-en.pdf) (GB/T 32905-2016, GM/T 0004-2012, ISO/IEC 10118-3:2018).
-We also provide rudimentary instantiation in [sm3.c](sm3.c) and unit test in
-[test_sm3.c](test_sm3.c).
+We also provide rudimentary instantiation in [sm3_wrap.c](sm3_wrap.c) and unit
+tests in [sm3_test.c](sm3_test.c).
 
 Observations:
 

@@ -1,11 +1,11 @@
-//  sha3.h
+//  sha3_wrap.h
 //  2020-03-02  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
 //  FIPS 202: SHA-3 hash and SHAKE eXtensible Output Functions (XOF)
 
-#ifndef _SHA3_H_
-#define _SHA3_H_
+#ifndef _SHA3_WRAP_H_
+#define _SHA3_WRAP_H_
 
 #include <stddef.h>
 #include <stdint.h>

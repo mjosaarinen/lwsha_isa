@@ -1,10 +1,10 @@
-//  rv32_sm3.c
+//  sm3_rv32_cf.c
 //  2020-03-10  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
 //  The Chinese Standard SM3 Hash Function
 //  GB/T 32905-2016, GM/T 0004-2012, ISO/IEC 10118-3:2018
-#include "sm3.h"
+#include "sm3_wrap.h"
 
 //  bitmanip (emulation) prototypes here
 #include "bitmanip.h"

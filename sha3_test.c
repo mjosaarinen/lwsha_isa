@@ -1,11 +1,11 @@
-//  test_sha3.c
+//  sha3_test.c
 //  2020-03-09  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
 //  Unit tests for FIPS 202 SHA-3.
 
 #include "test_hex.h"
-#include "sha3.h"
+#include "sha3_wrap.h"
 
 //  Test the Keccak-p[1600,24](S) permutation.
 

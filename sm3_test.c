@@ -1,4 +1,4 @@
-//  test_sm3.c
+//  sm3_test.c
 //  2020-03-30  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
@@ -8,7 +8,7 @@
 //  simplified test with "abc" test vector from the standard
 
 #include "test_hex.h"
-#include "sm3.h"
+#include "sm3_wrap.h"
 
 int test_sm3()
 {

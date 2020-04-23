@@ -1,11 +1,11 @@
-//  sha3.c
+//  sha3_wrap.c
 //  2020-03-02  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
 //  FIPS 202: SHA-3 hash and SHAKE eXtensible Output Functions (XOF)
 //  Hash padding mode code for testing permutation implementations.
 
-#include "sha3.h"
+#include "sha3_wrap.h"
 
 //  These functions have not been optimized for performance -- they are
 //  here just to facilitate testing of the permutation code implementations.

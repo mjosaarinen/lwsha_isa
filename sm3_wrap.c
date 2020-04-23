@@ -1,4 +1,4 @@
-//  sm3.c
+//  sm3_wrap.c
 //  2020-03-10  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
@@ -8,7 +8,7 @@
 //  Simple wrapper for the compression function
 
 #include <string.h>
-#include "sm3.h"
+#include "sm3_wrap.h"
 
 //  pointer to the compression functions
 void (*sm3_compress)(void *s) = &rv32_sm3_compress;

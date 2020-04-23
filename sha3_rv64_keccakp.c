@@ -1,4 +1,4 @@
-//  rv64_keccakp.c
+//  sha3_rv64_keccakp.c
 //  2020-03-05  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 

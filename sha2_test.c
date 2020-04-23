@@ -1,11 +1,11 @@
-//  test_sha3.c
+//  sha2_test.c
 //  2020-03-09  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
 //  Unit tests for FIPS 180-4 SHA-2.
 
 #include "test_hex.h"
-#include "sha2.h"
+#include "sha2_wrap.h"
 
 //  SHA2-224/256
 

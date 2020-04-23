@@ -1,9 +1,9 @@
-//  rv32_sha256.c
+//  sha2_rv32_cf256.c
 //  2020-03-08  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
 //  FIPS 180-4 SHA2-224/256 compression function for RV32
-#include "sha2.h"
+#include "sha2_wrap.h"
 
 //  bitmanip (emulation) prototypes here
 #include "bitmanip.h"

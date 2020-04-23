@@ -1,10 +1,10 @@
-//  rv64_sha512.c
+//  sha2_rv64_cf512.c
 //  2020-03-08  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
 //  FIPS 180-4 SHA2-384/512 compression function for RV64
 
-#include "sha2.h"
+#include "sha2_wrap.h"
 
 //  bitmanip (emulation) prototypes here
 #include "bitmanip.h"

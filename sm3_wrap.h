@@ -1,12 +1,12 @@
-//  sm3.h
+//  sm3_wrap.h
 //  2020-03-10  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
 //  The Chinese Standard SM3 Hash Function
 //  GB/T 32905-2016, GM/T 0004-2012, ISO/IEC 10118-3:2018
 
-#ifndef _SM3_H_
-#define _SM3_H_
+#ifndef _SM3_WRAP_H_
+#define _SM3_WRAP_H_
 
 #include <stddef.h>
 #include <stdint.h>

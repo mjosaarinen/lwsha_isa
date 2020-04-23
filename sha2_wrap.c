@@ -1,4 +1,4 @@
-//  sha2.c
+//  sha2_wrap.c
 //  2020-03-10  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
@@ -6,7 +6,7 @@
 //  implementations. This generic wrap part is not optimized for performance.
 
 #include <string.h>
-#include "sha2.h"
+#include "sha2_wrap.h"
 
 //  pointers to the compression functions
 
