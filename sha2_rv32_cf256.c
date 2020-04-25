@@ -53,8 +53,6 @@ uint32_t sha256_sig1(uint32_t rs1)
 	x0 = x0 + sha256_sig0(x1);		\
 	x0 = x0 + sha256_sig1(xe);		}
 
-#include <stdio.h>
-
 //  compression function (this one does *not* modify m[16])
 
 void rv32_sha256_compress(void *s)
