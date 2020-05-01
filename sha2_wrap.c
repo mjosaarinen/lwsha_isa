@@ -7,6 +7,7 @@
 
 #include <string.h>
 #include "sha2_wrap.h"
+#include "rv_endian.h"
 
 //  pointers to the compression functions
 
@@ -15,15 +16,24 @@ void (*sha512_compress)(void *s) = &rv64_sha512_compress;
 
 //  shared part between SHA-224 and SHA-256
 
-static void sha256pad(uint32_t * s, const void *in, size_t inlen)
+static void sha256pad(uint32_t * s,
+					  const uint8_t * k, size_t klen, uint8_t pad,
+					  const void *in, size_t inlen)
 {
 	size_t i;
 	uint64_t x;
 	uint8_t *mp = (uint8_t *) & s[8];
 	const uint8_t *ip = in;
 
-	//  "md padding"
 	x = inlen << 3;							//  length in bits
+
+	if (k != NULL) {						//  key block for HMAC
+		x += 512;
+		for (i = 0; i < klen; i++)
+			mp[i] = k[i] ^ pad;
+		memset(mp + klen, pad, 64 - klen);
+		sha256_compress(s);
+	}
 
 	while (inlen >= 64) {					//  full blocks
 		memcpy(mp, ip, 64);
@@ -38,6 +48,7 @@ static void sha256pad(uint32_t * s, const void *in, size_t inlen)
 		sha256_compress(s);
 		inlen = 0;
 	}
+
 	i = 64;									//  process length
 	while (x > 0) {
 		mp[--i] = x & 0xFF;
@@ -47,67 +58,117 @@ static void sha256pad(uint32_t * s, const void *in, size_t inlen)
 	sha256_compress(s);
 }
 
+//  SHA-224 initial values H0, Sect 5.3.2.
+
+static const uint32_t sha2_224_h0[8] = {
+	0xC1059ED8, 0x367CD507, 0x3070DD17, 0xF70E5939,
+	0xFFC00B31, 0x68581511, 0x64F98FA7, 0xBEFA4FA4
+};
+
 //  Compute 28-byte message digest to "md" from "in" which has "inlen" bytes
 
 void sha2_224(uint8_t * md, const void *in, size_t inlen)
 {
-	size_t i;
-	uint32_t t, s[8 + 24];
+	int i;
+	uint32_t s[8 + 24];
 
-	//  SHA-224 initial values H0, Sect 5.3.2.
-	s[0] = 0xC1059ED8;
-	s[1] = 0x367CD507;
-	s[2] = 0x3070DD17;
-	s[3] = 0xF70E5939;
-	s[4] = 0xFFC00B31;
-	s[5] = 0x68581511;
-	s[6] = 0x64F98FA7;
-	s[7] = 0xBEFA4FA4;
+	for (i = 0; i < 8; i++)					//  set H0 (IV)
+		s[i] = sha2_224_h0[i];
 
-	sha256pad(s, in, inlen);
+	sha256pad(s, NULL, 0, 0x00, in, inlen);
 
-	//  store big endian output
-	for (i = 0; i < 28; i += 4) {
-		t = s[i >> 2];
-		md[i] = t >> 24;
-		md[i + 1] = (t >> 16) & 0xFF;
-		md[i + 2] = (t >> 8) & 0xFF;
-		md[i + 3] = t & 0xFF;
-	}
+	for (i = 0; i < 7; i++)					//  store big endian output
+		be_put32(&md[i << 2], s[i]);
+
 }
+
+void hmac_sha2_224(uint8_t * mac, const void *k, size_t klen,
+				   const void *in, size_t inlen)
+{
+	int i;
+	uint32_t s[8 + 16];
+	uint8_t t[28], k0[28];
+
+	if (klen > 64) {						//  hash the key if needed
+		sha2_224(k0, k, klen);
+		k = k0;
+		klen = 28;
+	}
+
+	for (i = 0; i < 8; i++)					//  set H0 (IV)
+		s[i] = sha2_224_h0[i];
+
+	sha256pad(s, k, klen, 0x36, in, inlen);
+
+	for (i = 0; i < 7; i++)					//  get temporary, reinit
+		be_put32(&t[i << 2], s[i]);
+	for (i = 0; i < 8; i++)
+		s[i] = sha2_224_h0[i];				//  set H0 (IV)
+
+	sha256pad(s, k, klen, 0x5c, t, 28);
+
+	for (i = 0; i < 7; i++)					//  store big endian output
+		be_put32(&mac[i << 2], s[i]);
+}
+
+//  SHA-256 initial values H0, Sect 5.3.3.
+
+static const uint32_t sha2_256_h0[8] = {
+	0x6A09E667, 0xBB67AE85, 0x3C6EF372, 0xA54FF53A,
+	0x510E527F, 0x9B05688C, 0x1F83D9AB, 0x5BE0CD19
+};
 
 //  Compute 32-byte message digest to "md" from "in" which has "inlen" bytes
 
 void sha2_256(uint8_t * md, const void *in, size_t inlen)
 {
-	size_t i;
-	uint32_t t, s[8 + 16];
+	int i;
+	uint32_t s[8 + 16];
 
-	//  SHA-256 initial values H0, Sect 5.3.3.
-	s[0] = 0x6A09E667;
-	s[1] = 0xBB67AE85;
-	s[2] = 0x3C6EF372;
-	s[3] = 0xA54FF53A;
-	s[4] = 0x510E527F;
-	s[5] = 0x9B05688C;
-	s[6] = 0x1F83D9AB;
-	s[7] = 0x5BE0CD19;
+	for (i = 0; i < 8; i++)					//  set H0 (IV)
+		s[i] = sha2_256_h0[i];
 
-	sha256pad(s, in, inlen);
+	sha256pad(s, NULL, 0, 0x00, in, inlen);
 
-	//  store big endian output
-	for (i = 0; i < 32; i += 4) {
-		t = s[i >> 2];
-		md[i] = t >> 24;
-		md[i + 1] = (t >> 16) & 0xFF;
-		md[i + 2] = (t >> 8) & 0xFF;
-		md[i + 3] = t & 0xFF;
-	}
+	for (i = 0; i < 8; i++)					//  store big endian output
+		be_put32(&md[i << 2], s[i]);
 }
+
+void hmac_sha2_256(uint8_t * mac, const void *k, size_t klen,
+				   const void *in, size_t inlen)
+{
+	int i;
+	uint32_t s[8 + 16];
+	uint8_t t[32], k0[32];
+
+	if (klen > 64) {						//  hash the key if needed
+		sha2_256(k0, k, klen);
+		k = k0;
+		klen = 32;
+	}
+
+	for (i = 0; i < 8; i++)					//  set H0 (IV)
+		s[i] = sha2_256_h0[i];
+
+	sha256pad(s, k, klen, 0x36, in, inlen);
+
+	for (i = 0; i < 8; i++) {				//  get temporary, reinit
+		be_put32(&t[i << 2], s[i]);
+		s[i] = sha2_256_h0[i];				//  set H0 (IV)
+	}
+
+	sha256pad(s, k, klen, 0x5c, t, 32);
+
+	for (i = 0; i < 8; i++)					//  store big endian output
+		be_put32(&mac[i << 2], s[i]);
+}
+
 
 //  shared part between SHA-384 and SHA-512
 
-static void sha512pad(uint64_t s[8], const void *in, size_t inlen)
+static void sha512pad(uint64_t s[8],
+					  const uint8_t * k, size_t klen, uint8_t pad,
+					  const void *in, size_t inlen)
 {
 	size_t i;
 	uint64_t x;
@@ -115,8 +176,15 @@ static void sha512pad(uint64_t s[8], const void *in, size_t inlen)
 	uint8_t *mp = (uint8_t *) & s[8];
 	const uint8_t *ip = in;
 
-	//  "md padding"
 	x = inlen << 3;							//  length in bits
+
+	if (k != NULL) {						//  key block for HMAC
+		x += 1024;
+		for (i = 0; i < klen; i++)
+			mp[i] = k[i] ^ pad;
+		memset(mp + klen, pad, 128 - klen);
+		sha512_compress(s);
+	}
 
 	while (inlen >= 128) {					//  full blocks
 		memcpy(mp, ip, 128);
@@ -124,6 +192,7 @@ static void sha512pad(uint64_t s[8], const void *in, size_t inlen)
 		inlen -= 128;
 		ip += 128;
 	}
+
 	memcpy(mp, ip, inlen);					//  last data block
 	mp[inlen++] = 0x80;
 	if (inlen > 112) {
@@ -131,6 +200,7 @@ static void sha512pad(uint64_t s[8], const void *in, size_t inlen)
 		sha512_compress(s);
 		inlen = 0;
 	}
+
 	i = 128;								//  process length
 	while (x > 0) {
 		mp[--i] = x & 0xFF;
@@ -140,70 +210,111 @@ static void sha512pad(uint64_t s[8], const void *in, size_t inlen)
 	sha512_compress(s);
 }
 
+//  SHA-384 initial values H0, Sect 5.3.4.
+
+static const uint64_t sha2_384_h0[8] = {
+	0xCBBB9D5DC1059ED8LL, 0x629A292A367CD507LL,
+	0x9159015A3070DD17LL, 0x152FECD8F70E5939LL,
+	0x67332667FFC00B31LL, 0x8EB44A8768581511LL,
+	0xDB0C2E0D64F98FA7LL, 0x47B5481DBEFA4FA4LL
+};
+
 //  Compute 48-byte message digest to "md" from "in" which has "inlen" bytes
 
 void sha2_384(uint8_t * md, const void *in, size_t inlen)
 {
-	size_t i;
-	uint64_t t, s[8 + 16];
+	int i;
+	uint64_t s[8 + 16];
 
-	//  SHA-384 initial values H0, Sect 5.3.4.
+	for (i = 0; i < 8; i++)					//  set H0 (IV)
+		s[i] = sha2_384_h0[i];
 
-	s[0] = 0xCBBB9D5DC1059ED8LL;
-	s[1] = 0x629A292A367CD507LL;
-	s[2] = 0x9159015A3070DD17LL;
-	s[3] = 0x152FECD8F70E5939LL;
-	s[4] = 0x67332667FFC00B31LL;
-	s[5] = 0x8EB44A8768581511LL;
-	s[6] = 0xDB0C2E0D64F98FA7LL;
-	s[7] = 0x47B5481DBEFA4FA4LL;
+	sha512pad(s, NULL, 0, 0x00, in, inlen);
 
-	sha512pad(s, in, inlen);
-
-	//  store big endian output
-	for (i = 0; i < 48; i += 8) {
-		t = s[i >> 3];
-		md[i] = t >> 56;
-		md[i + 1] = (t >> 48) & 0xFF;
-		md[i + 2] = (t >> 40) & 0xFF;
-		md[i + 3] = (t >> 32) & 0xFF;
-		md[i + 4] = (t >> 24) & 0xFF;
-		md[i + 5] = (t >> 16) & 0xFF;
-		md[i + 6] = (t >> 8) & 0xFF;
-		md[i + 7] = t & 0xFF;
-	}
+	for (i = 0; i < 6; i++)					//  store big endian output
+		be_put64(&md[i << 3], s[i]);
 }
+
+void hmac_sha2_384(uint8_t * mac, const void *k, size_t klen,
+				   const void *in, size_t inlen)
+{
+	int i;
+	uint64_t s[8 + 16];
+	uint8_t t[48], k0[48];
+
+	if (klen > 128) {						//  hash the key if needed
+		sha2_384(k0, k, klen);
+		k = k0;
+		klen = 48;
+	}
+
+	for (i = 0; i < 8; i++)					//  set H0 (IV)
+		s[i] = sha2_384_h0[i];
+
+	sha512pad(s, k, klen, 0x36, in, inlen);
+
+	for (i = 0; i < 6; i++) {				//  get temporary, reinit
+		be_put64(&t[i << 3], s[i]);
+	}
+	for (i = 0; i < 8; i++)					//  set H0 (IV)
+		s[i] = sha2_384_h0[i];
+
+	sha512pad(s, k, klen, 0x5c, t, 48);
+
+	for (i = 0; i < 6; i++)					//  store big endian output
+		be_put64(&mac[i << 3], s[i]);
+}
+
+//  SHA-512 initial values H0, Sect 5.3.5.
+
+static const uint64_t sha2_512_h0[8] = {
+	0x6A09E667F3BCC908LL, 0xBB67AE8584CAA73BLL,
+	0x3C6EF372FE94F82BLL, 0xA54FF53A5F1D36F1LL,
+	0x510E527FADE682D1LL, 0x9B05688C2B3E6C1FLL,
+	0x1F83D9ABFB41BD6BLL, 0x5BE0CD19137E2179LL
+};
 
 //  Compute 64-byte message digest to "md" from "in" which has "inlen" bytes
 
 void sha2_512(uint8_t * md, const void *in, size_t inlen)
 {
-	size_t i;
-	uint64_t t, s[8 + 16];
+	int i;
+	uint64_t s[8 + 16];
 
-	//  SHA-512 initial values H0, Sect 5.3.5.
+	for (i = 0; i < 8; i++)					//  set H0 (IV)
+		s[i] = sha2_512_h0[i];
 
-	s[0] = 0x6A09E667F3BCC908LL;
-	s[1] = 0xBB67AE8584CAA73BLL;
-	s[2] = 0x3C6EF372FE94F82BLL;
-	s[3] = 0xA54FF53A5F1D36F1LL;
-	s[4] = 0x510E527FADE682D1LL;
-	s[5] = 0x9B05688C2B3E6C1FLL;
-	s[6] = 0x1F83D9ABFB41BD6BLL;
-	s[7] = 0x5BE0CD19137E2179LL;
+	sha512pad(s, NULL, 0, 0x00, in, inlen);
 
-	sha512pad(s, in, inlen);
+	for (i = 0; i < 8; i++)					//  store big endian output
+		be_put64(&md[i << 3], s[i]);
+}
 
-	//  store big endian output
-	for (i = 0; i < 64; i += 8) {
-		t = s[i >> 3];
-		md[i] = t >> 56;
-		md[i + 1] = (t >> 48) & 0xFF;
-		md[i + 2] = (t >> 40) & 0xFF;
-		md[i + 3] = (t >> 32) & 0xFF;
-		md[i + 4] = (t >> 24) & 0xFF;
-		md[i + 5] = (t >> 16) & 0xFF;
-		md[i + 6] = (t >> 8) & 0xFF;
-		md[i + 7] = t & 0xFF;
+void hmac_sha2_512(uint8_t * mac, const void *k, size_t klen,
+				   const void *in, size_t inlen)
+{
+	int i;
+	uint64_t s[8 + 16];
+	uint8_t t[64], k0[64];
+
+	if (klen > 128) {						//  hash the key if needed
+		sha2_512(k0, k, klen);
+		k = k0;
+		klen = 64;
 	}
+
+	for (i = 0; i < 8; i++)					//  set H0 (IV)
+		s[i] = sha2_512_h0[i];
+
+	sha512pad(s, k, klen, 0x36, in, inlen);
+
+	for (i = 0; i < 8; i++) {				//  get temporary, reinit
+		be_put64(&t[i << 3], s[i]);
+		s[i] = sha2_512_h0[i];				//  set H0 (IV)
+	}
+
+	sha512pad(s, k, klen, 0x5c, t, 64);
+
+	for (i = 0; i < 8; i++)					//  store big endian output
+		be_put64(&mac[i << 3], s[i]);
 }

@@ -2,15 +2,17 @@
 //  2020-03-09  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-//  Unit tests for FIPS 180-4 SHA-2.
+//  Unit tests for FIPS 180-4 SHA-2 and FIPS 198 HMAC.
 
 #include "test_hex.h"
 #include "sha2_wrap.h"
 
 //  SHA2-224/256
 
-int test_sha256()
+int test_sha2_256()
 {
+	//  Padding tests
+
 	const char *sha256_tv[][2] = {
 		{ "",
 		 "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855" },
@@ -33,23 +35,25 @@ int test_sha256()
 		{ NULL, NULL }
 	};
 
-	uint8_t md[32], in[256];
+	uint8_t md[32], d[256];
 	int fail = 0;
 	int i;
 
 	//  SHA2-256
 	sha2_256(md, "abc", 3);
 	fail += chkhex("SHA2-256", md, 32,
-				   "BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD");
+				   "BA7816BF8F01CFEA414140DE5DAE2223"
+				   "B00361A396177A9CB410FF61F20015AD");
 
 	//  SHA2-224
-	sha2_224(md, in, readhex(in, sizeof(in), "10713B894DE4A734C0"));
+	sha2_224(md, d, readhex(d, sizeof(d), "10713B894DE4A734C0"));
 	fail += chkhex("SHA2-224", md, 28,
-				   "03842600C86F5CD60C3A2147A067CB962A05303C3488B05CB45327BD");
+				   "03842600C86F5CD60C3A2147A067CB96"
+				   "2A05303C3488B05CB45327BD");
 
 	//  padding tests
 	for (i = 0; sha256_tv[i][0] != NULL; i++) {
-		sha2_256(md, in, readhex(in, sizeof(in), sha256_tv[i][0]));
+		sha2_256(md, d, readhex(d, sizeof(d), sha256_tv[i][0]));
 		fail += chkhex("SHA2-256", md, 32, sha256_tv[i][1]);
 	}
 
@@ -58,39 +62,166 @@ int test_sha256()
 
 //  SHA2-384/512
 
-int test_sha512()
+int test_sha2_512()
 {
-	uint8_t md[64], in[256];
+	uint8_t md[64], d[256];
+	size_t dlen;
 	int fail = 0;
 
 	//  SHA2-512
 	sha2_512(md, "abc", 3);
 	fail += chkhex("SHA2-512", md, 64,
-				   "DDAF35A193617ABACC417349AE20413112E6FA4E89A97EA20A9EEEE64B55D39A"
-				   "2192992A274FC1A836BA3C23A3FEEBBD454D4423643CE80E2A9AC94FA54CA49F");
+				   "DDAF35A193617ABACC417349AE204131"
+				   "12E6FA4E89A97EA20A9EEEE64B55D39A"
+				   "2192992A274FC1A836BA3C23A3FEEBBD"
+				   "454D4423643CE80E2A9AC94FA54CA49F");
 
 	//  SHA2-512
-	sha2_512(md, "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmn"
-			 "hijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu", 112);
+	sha2_512(md, "abcdefghbcdefghicdefghijdefghijk"
+			 "efghijklfghijklmghijklmnhijklmno"
+			 "ijklmnopjklmnopqklmnopqrlmnopqrs" "mnopqrstnopqrstu", 112);
 	fail += chkhex("SHA2-512", md, 64,
-				   "8E959B75DAE313DA8CF4F72814FC143F8F7779C6EB9F7FA17299AEADB6889018"
-				   "501D289E4900F7E4331B99DEC4B5433AC7D329EEB6DD26545E96E55B874BE909");
+				   "8E959B75DAE313DA8CF4F72814FC143F"
+				   "8F7779C6EB9F7FA17299AEADB6889018"
+				   "501D289E4900F7E4331B99DEC4B5433A"
+				   "C7D329EEB6DD26545E96E55B874BE909");
 
 	//  SHA2-384
 	sha2_384(md, "", 0);
 	fail += chkhex("SHA2-384", md, 48,
-				   "38B060A751AC96384CD9327EB1B1E36A21FDB71114BE0743"
-				   "4C0CC7BF63F6E1DA274EDEBFE76F65FBD51AD2F14898B95B");
-
-	sha2_384(md, in, readhex(in, sizeof(in),
-							 "A04F390A9CC2EFFAD05DB80D9076A8D4B6CC8BBA97B27B423670B290B8E69C2B"
-							 "187230011C1481AC88D090F39154659494DB5E410851C6E8B2B8A93717CAE760"
-							 "37E0881978124FE7E1A0929D8891491F4E99646CC94062DC82411FA66130EDA4"
-							 "6560E75B98048236439465125E737B"));
+				   "38B060A751AC96384CD9327EB1B1E36A"
+				   "21FDB71114BE07434C0CC7BF63F6E1DA"
+				   "274EDEBFE76F65FBD51AD2F14898B95B");
+	dlen = readhex(d, sizeof(d),
+				   "A04F390A9CC2EFFAD05DB80D9076A8D4"
+				   "B6CC8BBA97B27B423670B290B8E69C2B"
+				   "187230011C1481AC88D090F391546594"
+				   "94DB5E410851C6E8B2B8A93717CAE760"
+				   "37E0881978124FE7E1A0929D8891491F"
+				   "4E99646CC94062DC82411FA66130EDA4"
+				   "6560E75B98048236439465125E737B");
+	sha2_384(md, d, dlen);
 	fail += chkhex("SHA2-384", md, 48,
-				   "E7089D72945CEF851E689B4409CFB63D135F0B5CDFB0DAC6"
-				   "C3A292DD70371AB4B79DA1997D7992906AC7213502662920");
+				   "E7089D72945CEF851E689B4409CFB63D"
+				   "135F0B5CDFB0DAC6C3A292DD70371AB4"
+				   "B79DA1997D7992906AC7213502662920");
 
+	return fail;
+}
+
+//  HMAC tests
+
+int test_sha2_hmac()
+{
+	uint8_t mac[64], k[256], d[256];
+	size_t klen, dlen;
+	int fail = 0;
+
+	//  Test case 1 from RFC 4231
+
+	klen = readhex(k, sizeof(k),
+				   "0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B0B" "0B0B0B0B");
+	dlen = readhex(d, sizeof(d), "4869205468657265");
+
+	hmac_sha2_224(mac, k, klen, d, dlen);
+	fail += chkhex("HMAC-SHA2-224", mac, 28,
+				   "896FB1128ABBDF196832107CD49DF33F"
+				   "47B4B1169912BA4F53684B22");
+
+	hmac_sha2_256(mac, k, klen, d, dlen);
+	fail += chkhex("HMAC-SHA2-256", mac, 32,
+				   "B0344C61D8DB38535CA8AFCEAF0BF12B"
+				   "881DC200C9833DA726E9376C2E32CFF7");
+
+	hmac_sha2_384(mac, k, klen, d, dlen);
+	fail += chkhex("HMAC-SHA2-384", mac, 48,
+				   "AFD03944D84895626B0825F4AB46907F"
+				   "15F9DADBE4101EC682AA034C7CEBC59C"
+				   "FAEA9EA9076EDE7F4AF152E8B2FA9CB6");
+
+	hmac_sha2_512(mac, k, klen, d, dlen);
+	fail += chkhex("HMAC-SHA2-512", mac, 64,
+				   "87AA7CDEA5EF619D4FF0B4241A1D6CB0"
+				   "2379F4E2CE4EC2787AD0B30545E17CDE"
+				   "DAA833B7D6B8A702038B274EAEA3F4E4"
+				   "BE9D914EEB61F1702E696C203A126854");
+
+
+	//  Test case 2 from RFC 4231
+
+	klen = readhex(k, sizeof(k), "4A656665");
+	dlen = readhex(d, sizeof(d),
+				   "7768617420646F2079612077616E7420"
+				   "666F72206E6F7468696E673F");
+
+	hmac_sha2_224(mac, k, klen, d, dlen);
+	fail += chkhex("HMAC-SHA2-224", mac, 28,
+				   "A30E01098BC6DBBF45690F3A7E9E6D0F"
+				   "8BBEA2A39E6148008FD05E44");
+
+	hmac_sha2_256(mac, k, klen, d, dlen);
+	fail += chkhex("HMAC-SHA2-256", mac, 32,
+				   "5BDCC146BF60754E6A042426089575C7"
+				   "5A003F089D2739839DEC58B964EC3843");
+
+	hmac_sha2_384(mac, k, klen, d, dlen);
+	fail += chkhex("HMAC-SHA2-384", mac, 48,
+				   "AF45D2E376484031617F78D2B58A6B1B"
+				   "9C7EF464F5A01B47E42EC3736322445E"
+				   "8E2240CA5E69E2C78B3239ECFAB21649");
+
+	hmac_sha2_512(mac, k, klen, d, dlen);
+	fail += chkhex("HMAC-SHA2-512", mac, 64,
+				   "164B7A7BFCF819E2E395FBE73B56E0A3"
+				   "87BD64222E831FD610270CD7EA250554"
+				   "9758BF75C05A994A6D034F65F8F0E6FD"
+				   "CAEAB1A34D4A6B4B636E070A38BCE737");
+
+
+	//  Test case 7 from RFC 4231 (multi-block key and data)
+
+	klen = readhex(k, sizeof(k),
+				   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+				   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+				   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+				   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+				   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+				   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+				   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+				   "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" "AAAAAA");
+	dlen = readhex(d, sizeof(d),
+				   "54686973206973206120746573742075"
+				   "73696E672061206C6172676572207468"
+				   "616E20626C6F636B2D73697A65206B65"
+				   "7920616E642061206C61726765722074"
+				   "68616E20626C6F636B2D73697A652064"
+				   "6174612E20546865206B6579206E6565"
+				   "647320746F2062652068617368656420"
+				   "6265666F7265206265696E6720757365"
+				   "642062792074686520484D414320616C" "676F726974686D2E");
+
+	hmac_sha2_224(mac, k, klen, d, dlen);
+	fail += chkhex("HMAC-SHA2-224", mac, 28,
+				   "3A854166AC5D9F023F54D517D0B39DBD"
+				   "946770DB9C2B95C9F6F565D1");
+
+	hmac_sha2_256(mac, k, klen, d, dlen);
+	fail += chkhex("HMAC-SHA2-256", mac, 32,
+				   "9B09FFA71B942FCB27635FBCD5B0E944"
+				   "BFDC63644F0713938A7F51535C3A35E2");
+
+	hmac_sha2_384(mac, k, klen, d, dlen);
+	fail += chkhex("HMAC-SHA2-384", mac, 48,
+				   "6617178E941F020D351E2F254E8FD32C"
+				   "602420FEB0B8FB9ADCCEBB82461E99C5"
+				   "A678CC31E799176D3860E6110C46523E");
+
+	hmac_sha2_512(mac, k, klen, d, dlen);
+	fail += chkhex("HMAC-SHA2-512", mac, 64,
+				   "E37B6A775DC87DBAA4DFA9F96E5E3FFD"
+				   "DEBD71F8867289865DF5A32D20CDC944"
+				   "B6022CAC3C4982B10D5EEB55C3E4DE15"
+				   "134676FB6DE0446065C97440FA8C6A58");
 
 	return fail;
 }
@@ -103,15 +234,20 @@ int test_sha2_all()
 
 	printf("[INFO] === SHA2-256 using rv32_sha256_compress() ===\n");
 	sha256_compress = rv32_sha256_compress;
-	fail += test_sha256();
+	fail += test_sha2_256();
 
 	printf("[INFO] === SHA2-512 using rv64_sha512_compress() ===\n");
 	sha512_compress = rv64_sha512_compress;
-	fail += test_sha512();
+	fail += test_sha2_512();
 
 	printf("[INFO] === SHA2-512 using rv32_sha512_compress() ===\n");
 	sha512_compress = rv32_sha512_compress;
-	fail += test_sha512();
+	fail += test_sha2_512();
+
+	printf("[INFO] === rv32_sha256_compress() rv64_sha512_compress() ===\n");
+	sha256_compress = rv32_sha256_compress;
+	sha512_compress = rv64_sha512_compress;
+	fail += test_sha2_hmac();
 
 	return fail;
 }

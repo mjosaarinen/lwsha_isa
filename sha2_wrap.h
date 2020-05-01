@@ -10,6 +10,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+//  === Single-call hash wrappers ===
+
 //  SHA2-224: Compute 28-byte hash to "md" from "in" which has "inlen" bytes.
 void sha2_224(uint8_t * md, const void *in, size_t inlen);
 
@@ -22,6 +24,26 @@ void sha2_384(uint8_t * md, const void *in, size_t inlen);
 //  SHA2-512: Compute 64-byte hash to "md" from "in" which has "inlen" bytes.
 void sha2_512(uint8_t * md, const void *in, size_t inlen);
 
+
+//  === HMAC wrappers ===
+
+//  HMAC-SHA2-224: Compute 28-byte "mac" with key "k" of "klen" bytes.
+void hmac_sha2_224(uint8_t * mac, const void *k, size_t klen,
+				   const void *in, size_t inlen);
+
+//  HMAC-SHA2-256: Compute 32-byte "mac" with key "k" of "klen" bytes.
+void hmac_sha2_256(uint8_t * mac, const void *k, size_t klen,
+				   const void *in, size_t inlen);
+
+//  HMAC-SHA2-384: Compute 48-byte "mac" with key "k" of "klen" bytes.
+void hmac_sha2_384(uint8_t * mac, const void *k, size_t klen,
+				   const void *in, size_t inlen);
+
+//  HMAC-SHA2-512: Compute 64-byte "mac" with key "k" of "klen" bytes.
+void hmac_sha2_512(uint8_t * mac, const void *k, size_t klen,
+				   const void *in, size_t inlen);
+
+//  === Compression Functions ===
 
 //  function pointer to the compression function used by the test wrappers
 extern void (*sha256_compress)(void *);
