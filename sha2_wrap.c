@@ -78,7 +78,7 @@ void sha2_224(uint8_t * md, const void *in, size_t inlen)
 	sha256pad(s, NULL, 0, 0x00, in, inlen);
 
 	for (i = 0; i < 7; i++)					//  store big endian output
-		be_put32(&md[i << 2], s[i]);
+		put32u_be(&md[i << 2], s[i]);
 
 }
 
@@ -101,14 +101,14 @@ void hmac_sha2_224(uint8_t * mac, const void *k, size_t klen,
 	sha256pad(s, k, klen, 0x36, in, inlen);
 
 	for (i = 0; i < 7; i++)					//  get temporary, reinit
-		be_put32(&t[i << 2], s[i]);
+		put32u_be(&t[i << 2], s[i]);
 	for (i = 0; i < 8; i++)
 		s[i] = sha2_224_h0[i];				//  set H0 (IV)
 
 	sha256pad(s, k, klen, 0x5c, t, 28);
 
 	for (i = 0; i < 7; i++)					//  store big endian output
-		be_put32(&mac[i << 2], s[i]);
+		put32u_be(&mac[i << 2], s[i]);
 }
 
 //  SHA-256 initial values H0, Sect 5.3.3.
@@ -131,7 +131,7 @@ void sha2_256(uint8_t * md, const void *in, size_t inlen)
 	sha256pad(s, NULL, 0, 0x00, in, inlen);
 
 	for (i = 0; i < 8; i++)					//  store big endian output
-		be_put32(&md[i << 2], s[i]);
+		put32u_be(&md[i << 2], s[i]);
 }
 
 void hmac_sha2_256(uint8_t * mac, const void *k, size_t klen,
@@ -153,14 +153,14 @@ void hmac_sha2_256(uint8_t * mac, const void *k, size_t klen,
 	sha256pad(s, k, klen, 0x36, in, inlen);
 
 	for (i = 0; i < 8; i++) {				//  get temporary, reinit
-		be_put32(&t[i << 2], s[i]);
+		put32u_be(&t[i << 2], s[i]);
 		s[i] = sha2_256_h0[i];				//  set H0 (IV)
 	}
 
 	sha256pad(s, k, klen, 0x5c, t, 32);
 
 	for (i = 0; i < 8; i++)					//  store big endian output
-		be_put32(&mac[i << 2], s[i]);
+		put32u_be(&mac[i << 2], s[i]);
 }
 
 
@@ -232,7 +232,7 @@ void sha2_384(uint8_t * md, const void *in, size_t inlen)
 	sha512pad(s, NULL, 0, 0x00, in, inlen);
 
 	for (i = 0; i < 6; i++)					//  store big endian output
-		be_put64(&md[i << 3], s[i]);
+		put64u_be(&md[i << 3], s[i]);
 }
 
 void hmac_sha2_384(uint8_t * mac, const void *k, size_t klen,
@@ -254,7 +254,7 @@ void hmac_sha2_384(uint8_t * mac, const void *k, size_t klen,
 	sha512pad(s, k, klen, 0x36, in, inlen);
 
 	for (i = 0; i < 6; i++) {				//  get temporary, reinit
-		be_put64(&t[i << 3], s[i]);
+		put64u_be(&t[i << 3], s[i]);
 	}
 	for (i = 0; i < 8; i++)					//  set H0 (IV)
 		s[i] = sha2_384_h0[i];
@@ -262,7 +262,7 @@ void hmac_sha2_384(uint8_t * mac, const void *k, size_t klen,
 	sha512pad(s, k, klen, 0x5c, t, 48);
 
 	for (i = 0; i < 6; i++)					//  store big endian output
-		be_put64(&mac[i << 3], s[i]);
+		put64u_be(&mac[i << 3], s[i]);
 }
 
 //  SHA-512 initial values H0, Sect 5.3.5.
@@ -287,7 +287,7 @@ void sha2_512(uint8_t * md, const void *in, size_t inlen)
 	sha512pad(s, NULL, 0, 0x00, in, inlen);
 
 	for (i = 0; i < 8; i++)					//  store big endian output
-		be_put64(&md[i << 3], s[i]);
+		put64u_be(&md[i << 3], s[i]);
 }
 
 void hmac_sha2_512(uint8_t * mac, const void *k, size_t klen,
@@ -309,12 +309,12 @@ void hmac_sha2_512(uint8_t * mac, const void *k, size_t klen,
 	sha512pad(s, k, klen, 0x36, in, inlen);
 
 	for (i = 0; i < 8; i++) {				//  get temporary, reinit
-		be_put64(&t[i << 3], s[i]);
+		put64u_be(&t[i << 3], s[i]);
 		s[i] = sha2_512_h0[i];				//  set H0 (IV)
 	}
 
 	sha512pad(s, k, klen, 0x5c, t, 64);
 
 	for (i = 0; i < 8; i++)					//  store big endian output
-		be_put64(&mac[i << 3], s[i]);
+		put64u_be(&mac[i << 3], s[i]);
 }

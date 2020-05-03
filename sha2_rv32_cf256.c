@@ -15,33 +15,33 @@
 
 uint32_t sha256_sum0(uint32_t rs1)
 {
-	return rvb_ror(rs1, 2) ^ rvb_ror(rs1, 13) ^ rvb_ror(rs1, 22);
+	return rv32b_ror(rs1, 2) ^ rv32b_ror(rs1, 13) ^ rv32b_ror(rs1, 22);
 }
 
 uint32_t sha256_sum1(uint32_t rs1)
 {
-	return rvb_ror(rs1, 6) ^ rvb_ror(rs1, 11) ^ rvb_ror(rs1, 25);
+	return rv32b_ror(rs1, 6) ^ rv32b_ror(rs1, 11) ^ rv32b_ror(rs1, 25);
 }
 
 //  lower case sigma0, sigma1 is "sig"
 
 uint32_t sha256_sig0(uint32_t rs1)
 {
-	return rvb_ror(rs1, 7) ^ rvb_ror(rs1, 18) ^ (rs1 >> 3);
+	return rv32b_ror(rs1, 7) ^ rv32b_ror(rs1, 18) ^ (rs1 >> 3);
 }
 
 uint32_t sha256_sig1(uint32_t rs1)
 {
-	return rvb_ror(rs1, 17) ^ rvb_ror(rs1, 19) ^ (rs1 >> 10);
+	return rv32b_ror(rs1, 17) ^ rv32b_ror(rs1, 19) ^ (rs1 >> 10);
 }
 
 //  (((a | c) & b) | (c & a)) = Maj(a, b, c)
-//  ((e & f) ^ rvb_andn(g, e)) = Ch(e, f, g)
+//  ((e & f) ^ rv32b_andn(g, e)) = Ch(e, f, g)
 
 //  processing step, sets "d" and "h" as a function of all 8 inputs
 //  and message schedule "mi", round constant "ki"
 #define SHA256R(a, b, c, d, e, f, g, h, mi, ki) {	\
-	h = h + ((e & f) ^ rvb_andn(g, e)) + mi + ki;	\
+	h = h + ((e & f) ^ rv32b_andn(g, e)) + mi + ki;	\
 	h = h + sha256_sum1(e);							\
 	d = d + h;										\
 	h = h + sha256_sum0(a);							\
@@ -95,22 +95,22 @@ void rv32_sha256_compress(void *s)
 	h = sp[7];
 
 
-	m0 = rvb_grev(mp[0], 0x18);				//  load with rev8.w
-	m1 = rvb_grev(mp[1], 0x18);
-	m2 = rvb_grev(mp[2], 0x18);
-	m3 = rvb_grev(mp[3], 0x18);
-	m4 = rvb_grev(mp[4], 0x18);
-	m5 = rvb_grev(mp[5], 0x18);
-	m6 = rvb_grev(mp[6], 0x18);
-	m7 = rvb_grev(mp[7], 0x18);
-	m8 = rvb_grev(mp[8], 0x18);
-	m9 = rvb_grev(mp[9], 0x18);
-	ma = rvb_grev(mp[10], 0x18);
-	mb = rvb_grev(mp[11], 0x18);
-	mc = rvb_grev(mp[12], 0x18);
-	md = rvb_grev(mp[13], 0x18);
-	me = rvb_grev(mp[14], 0x18);
-	mf = rvb_grev(mp[15], 0x18);
+	m0 = rv32b_grev(mp[0], 0x18);			//  load with rev8.w
+	m1 = rv32b_grev(mp[1], 0x18);
+	m2 = rv32b_grev(mp[2], 0x18);
+	m3 = rv32b_grev(mp[3], 0x18);
+	m4 = rv32b_grev(mp[4], 0x18);
+	m5 = rv32b_grev(mp[5], 0x18);
+	m6 = rv32b_grev(mp[6], 0x18);
+	m7 = rv32b_grev(mp[7], 0x18);
+	m8 = rv32b_grev(mp[8], 0x18);
+	m9 = rv32b_grev(mp[9], 0x18);
+	ma = rv32b_grev(mp[10], 0x18);
+	mb = rv32b_grev(mp[11], 0x18);
+	mc = rv32b_grev(mp[12], 0x18);
+	md = rv32b_grev(mp[13], 0x18);
+	me = rv32b_grev(mp[14], 0x18);
+	mf = rv32b_grev(mp[15], 0x18);
 
 	while (1) {
 

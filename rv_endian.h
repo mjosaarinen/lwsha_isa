@@ -21,7 +21,7 @@
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define GREV_BE64(x) (x)
 #else
-//  RISC-V: grevw(x, 0x38) or rev8(x)
+//  RISC-V: grev(x, 0x38) or rev8(x)
 #define GREV_BE64(x) (						\
 	(((x) & 0xFF00000000000000LL) >> 56) | 	\
 	(((x) & 0x00FF000000000000LL) >> 40) | 	\
@@ -33,40 +33,83 @@
 	(((x) & 0x00000000000000FFLL) << 56))
 #endif
 
-//  big-endian loads and stores
-
-static inline uint32_t be_get32(const uint8_t * x)
+//  rotate left
+static inline uint32_t rol32(uint32_t x, uint32_t n)
 {
-	return (((uint32_t) x[0]) << 24) | (((uint32_t) x[1]) << 16) |
-		(((uint32_t) x[2]) << 8) | ((uint32_t) x[3]);
+	return ((x) << n) | ((x) >> (32 - n));
 }
 
-static inline void be_put32(uint8_t * x, uint32_t u)
+//  little-endian loads and stores (unaligned)
+
+static inline uint32_t get32u_le(const uint8_t * v)
 {
-	x[0] = u >> 24;
-	x[1] = u >> 16;
-	x[2] = u >> 8;
-	x[3] = u;
+	return ((uint32_t) v[0]) | (((uint32_t) v[1]) << 8) |
+		(((uint32_t) v[2]) << 16) | (((uint32_t) v[3]) << 24);
 }
 
-static inline uint64_t be_get64(const uint8_t * x)
+static inline void put32u_le(uint8_t * v, uint32_t x)
 {
-	return (((uint64_t) x[0]) << 56) | (((uint64_t) x[1]) << 48) |
-		(((uint64_t) x[2]) << 40) | (((uint64_t) x[3]) << 32) |
-		(((uint64_t) x[4]) << 24) | (((uint64_t) x[5]) << 16) |
-		(((uint64_t) x[6]) << 8) | ((uint64_t) x[7]);
+	v[0] = x;
+	v[1] = x >> 8;
+	v[2] = x >> 16;
+	v[3] = x >> 24;
 }
 
-static inline void be_put64(uint8_t * x, uint64_t u)
+static inline uint64_t get64u_le(const uint8_t * v)
 {
-	x[0] = u >> 56;
-	x[1] = u >> 48;
-	x[2] = u >> 40;
-	x[3] = u >> 32;
-	x[4] = u >> 24;
-	x[5] = u >> 16;
-	x[6] = u >> 8;
-	x[7] = u;
+	return ((uint64_t) v[0]) | (((uint64_t) v[1]) << 8) |
+		(((uint64_t) v[2]) << 16) | (((uint64_t) v[3]) << 24) |
+		(((uint64_t) v[4]) << 32) | (((uint64_t) v[5]) << 40) |
+		(((uint64_t) v[6]) << 48) | (((uint64_t) v[7]) << 56);
+}
+
+static inline void put64u_le(uint8_t * v, uint64_t x)
+{
+	v[0] = x;
+	v[1] = x >> 8;
+	v[2] = x >> 16;
+	v[3] = x >> 24;
+	v[4] = x >> 32;
+	v[5] = x >> 40;
+	v[6] = x >> 48;
+	v[7] = x >> 56;
+}
+
+
+//  big-endian loads and stores (unaligned)
+
+static inline uint32_t get32u_be(const uint8_t * v)
+{
+	return (((uint32_t) v[0]) << 24) | (((uint32_t) v[1]) << 16) |
+		(((uint32_t) v[2]) << 8) | ((uint32_t) v[3]);
+}
+
+static inline void put32u_be(uint8_t * v, uint32_t x)
+{
+	v[0] = x >> 24;
+	v[1] = x >> 16;
+	v[2] = x >> 8;
+	v[3] = x;
+}
+
+static inline uint64_t get64u_be(const uint8_t * v)
+{
+	return (((uint64_t) v[0]) << 56) | (((uint64_t) v[1]) << 48) |
+		(((uint64_t) v[2]) << 40) | (((uint64_t) v[3]) << 32) |
+		(((uint64_t) v[4]) << 24) | (((uint64_t) v[5]) << 16) |
+		(((uint64_t) v[6]) << 8) | ((uint64_t) v[7]);
+}
+
+static inline void put64u_be(uint8_t * v, uint64_t x)
+{
+	v[0] = x >> 56;
+	v[1] = x >> 48;
+	v[2] = x >> 40;
+	v[3] = x >> 32;
+	v[4] = x >> 24;
+	v[5] = x >> 16;
+	v[6] = x >> 8;
+	v[7] = x;
 }
 
 #endif

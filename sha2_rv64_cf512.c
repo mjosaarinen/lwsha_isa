@@ -16,33 +16,33 @@
 
 uint64_t sha512_sum0(uint64_t rs1)
 {
-	return rvb_rorw(rs1, 28) ^ rvb_rorw(rs1, 34) ^ rvb_rorw(rs1, 39);
+	return rv64b_ror(rs1, 28) ^ rv64b_ror(rs1, 34) ^ rv64b_ror(rs1, 39);
 }
 
 uint64_t sha512_sum1(uint64_t rs1)
 {
-	return rvb_rorw(rs1, 14) ^ rvb_rorw(rs1, 18) ^ rvb_rorw(rs1, 41);
+	return rv64b_ror(rs1, 14) ^ rv64b_ror(rs1, 18) ^ rv64b_ror(rs1, 41);
 }
 
 //  lower case sigma0, sigma1 is "sig"
 
 uint64_t sha512_sig0(uint64_t rs1)
 {
-	return rvb_rorw(rs1, 1) ^ rvb_rorw(rs1, 8) ^ (rs1 >> 7);
+	return rv64b_ror(rs1, 1) ^ rv64b_ror(rs1, 8) ^ (rs1 >> 7);
 }
 
 uint64_t sha512_sig1(uint64_t rs1)
 {
-	return rvb_rorw(rs1, 19) ^ rvb_rorw(rs1, 61) ^ (rs1 >> 6);
+	return rv64b_ror(rs1, 19) ^ rv64b_ror(rs1, 61) ^ (rs1 >> 6);
 }
 
 //  (((a | c) & b) | (c & a)) = Maj(a, b, c)
-//  ((e & f) ^ rvb_andn(g, e)) = Ch(e, f, g)
+//  ((e & f) ^ rv64b_andn(g, e)) = Ch(e, f, g)
 
 //  processing step, sets "d" and "h" as a function of all 8 inputs
 //  and message schedule "mi", round constant "ki"
 #define SHA512R(a, b, c, d, e, f, g, h, mi, ki) {	\
-	h = h + ((e & f) ^ rvb_andn(g, e)) + mi + ki;	\
+	h = h + ((e & f) ^ rv64b_andn(g, e)) + mi + ki;	\
 	h = h + sha512_sum1(e);							\
 	d = d + h;										\
 	h = h + sha512_sum0(a);							\
@@ -108,22 +108,22 @@ void rv64_sha512_compress(void *s)
 
 	//  load with rev8
 
-	m0 = rvb_grevw(mp[0], 0x38);
-	m1 = rvb_grevw(mp[1], 0x38);
-	m2 = rvb_grevw(mp[2], 0x38);
-	m3 = rvb_grevw(mp[3], 0x38);
-	m4 = rvb_grevw(mp[4], 0x38);
-	m5 = rvb_grevw(mp[5], 0x38);
-	m6 = rvb_grevw(mp[6], 0x38);
-	m7 = rvb_grevw(mp[7], 0x38);
-	m8 = rvb_grevw(mp[8], 0x38);
-	m9 = rvb_grevw(mp[9], 0x38);
-	ma = rvb_grevw(mp[10], 0x38);
-	mb = rvb_grevw(mp[11], 0x38);
-	mc = rvb_grevw(mp[12], 0x38);
-	md = rvb_grevw(mp[13], 0x38);
-	me = rvb_grevw(mp[14], 0x38);
-	mf = rvb_grevw(mp[15], 0x38);
+	m0 = rv64b_grev(mp[0], 0x38);
+	m1 = rv64b_grev(mp[1], 0x38);
+	m2 = rv64b_grev(mp[2], 0x38);
+	m3 = rv64b_grev(mp[3], 0x38);
+	m4 = rv64b_grev(mp[4], 0x38);
+	m5 = rv64b_grev(mp[5], 0x38);
+	m6 = rv64b_grev(mp[6], 0x38);
+	m7 = rv64b_grev(mp[7], 0x38);
+	m8 = rv64b_grev(mp[8], 0x38);
+	m9 = rv64b_grev(mp[9], 0x38);
+	ma = rv64b_grev(mp[10], 0x38);
+	mb = rv64b_grev(mp[11], 0x38);
+	mc = rv64b_grev(mp[12], 0x38);
+	md = rv64b_grev(mp[13], 0x38);
+	me = rv64b_grev(mp[14], 0x38);
+	mf = rv64b_grev(mp[15], 0x38);
 
 	while (1) {
 

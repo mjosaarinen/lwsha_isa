@@ -13,51 +13,51 @@
 
 uint32_t sm3_p0(uint32_t rs1)
 {
-	return rs1 ^ rvb_ror(rs1, 15) ^ rvb_ror(rs1, 23);
+	return rs1 ^ rv32b_ror(rs1, 15) ^ rv32b_ror(rs1, 23);
 }
 
 uint32_t sm3_p1(uint32_t rs1)
 {
-	return rs1 ^ rvb_ror(rs1, 9) ^ rvb_ror(rs1, 17);
+	return rs1 ^ rv32b_ror(rs1, 9) ^ rv32b_ror(rs1, 17);
 }
 
 
 //  key schedule
 
 #define SM3KEY(w0, w3, w7, wa, wd) {				\
-	t = w0 ^ w7 ^ rvb_ror(wd, 17);					\
+	t = w0 ^ w7 ^ rv32b_ror(wd, 17);				\
 	t = sm3_p1(t);									\
-	w0 = wa ^ rvb_ror(w3, 25) ^ t;					}
+	w0 = wa ^ rv32b_ror(w3, 25) ^ t;					}
 
 //  rounds 0..15
 
 #define SM3RF0(a, b, c, d, e, f, g, h, w0, w4) {	\
 	h = h + w0;										\
-	t = rvb_ror(a, 20);								\
+	t = rv32b_ror(a, 20);							\
 	u = t + e + tj;									\
-	u = rvb_ror(u, 25);								\
+	u = rv32b_ror(u, 25);							\
 	d = d + (t ^ u) + (a ^ b ^ c);					\
-	b = rvb_ror(b, 23);								\
+	b = rv32b_ror(b, 23);							\
 	h = h + u + (e ^ f ^ g);						\
 	h = sm3_p0(h);									\
-	f = rvb_ror(f, 13);								\
+	f = rv32b_ror(f, 13);							\
 	d = d + (w0 ^ w4);								\
-	tj = rvb_ror(tj, 31);							}
+	tj = rv32b_ror(tj, 31);							}
 
 //  rounds 16..63
 
 #define SM3RF1(a, b, c, d, e, f, g, h, w0, w4) {	\
 	h = h + w0;										\
-	t = rvb_ror(a, 20);								\
+	t = rv32b_ror(a, 20);								\
 	u = t + e + tj;									\
-	u = rvb_ror(u, 25);								\
+	u = rv32b_ror(u, 25);								\
 	d = d + (t ^ u) + (((a | c) & b) | (a & c));	\
-	b = rvb_ror(b, 23);								\
-	h = h + u + ((e & f) ^ rvb_andn(g, e));			\
+	b = rv32b_ror(b, 23);								\
+	h = h + u + ((e & f) ^ rv32b_andn(g, e));			\
 	h = sm3_p0(h);									\
-	f = rvb_ror(f, 13);								\
+	f = rv32b_ror(f, 13);								\
 	d = d + (w0 ^ w4);								\
-	tj = rvb_ror(tj, 31);							}
+	tj = rv32b_ror(tj, 31);							}
 
 
 //  compression function (this one does *not* modify mp[])
@@ -83,22 +83,22 @@ void rv32_sm3_compress(void *s)
 
 	//  load with rev8.w
 
-	m0 = rvb_grev(mp[0], 0x18);
-	m1 = rvb_grev(mp[1], 0x18);
-	m2 = rvb_grev(mp[2], 0x18);
-	m3 = rvb_grev(mp[3], 0x18);
-	m4 = rvb_grev(mp[4], 0x18);
-	m5 = rvb_grev(mp[5], 0x18);
-	m6 = rvb_grev(mp[6], 0x18);
-	m7 = rvb_grev(mp[7], 0x18);
-	m8 = rvb_grev(mp[8], 0x18);
-	m9 = rvb_grev(mp[9], 0x18);
-	ma = rvb_grev(mp[10], 0x18);
-	mb = rvb_grev(mp[11], 0x18);
-	mc = rvb_grev(mp[12], 0x18);
-	md = rvb_grev(mp[13], 0x18);
-	me = rvb_grev(mp[14], 0x18);
-	mf = rvb_grev(mp[15], 0x18);
+	m0 = rv32b_grev(mp[0], 0x18);
+	m1 = rv32b_grev(mp[1], 0x18);
+	m2 = rv32b_grev(mp[2], 0x18);
+	m3 = rv32b_grev(mp[3], 0x18);
+	m4 = rv32b_grev(mp[4], 0x18);
+	m5 = rv32b_grev(mp[5], 0x18);
+	m6 = rv32b_grev(mp[6], 0x18);
+	m7 = rv32b_grev(mp[7], 0x18);
+	m8 = rv32b_grev(mp[8], 0x18);
+	m9 = rv32b_grev(mp[9], 0x18);
+	ma = rv32b_grev(mp[10], 0x18);
+	mb = rv32b_grev(mp[11], 0x18);
+	mc = rv32b_grev(mp[12], 0x18);
+	md = rv32b_grev(mp[13], 0x18);
+	me = rv32b_grev(mp[14], 0x18);
+	mf = rv32b_grev(mp[15], 0x18);
 
 	tj = 0x79CC4519;
 

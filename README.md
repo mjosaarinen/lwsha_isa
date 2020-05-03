@@ -101,22 +101,22 @@ implementation files. For example for SHA-256 we have:
 ```C
 uint32_t sha256_sum0(uint32_t rs1)
 {
-    return rvb_ror(rs1, 2) ^ rvb_ror(rs1, 13) ^ rvb_ror(rs1, 22);
+    return rv32b_ror(rs1, 2) ^ rv32b_ror(rs1, 13) ^ rv32b_ror(rs1, 22);
 }
 
 uint32_t sha256_sum1(uint32_t rs1)
 {
-    return rvb_ror(rs1, 6) ^ rvb_ror(rs1, 11) ^ rvb_ror(rs1, 25);
+    return rv32b_ror(rs1, 6) ^ rv32b_ror(rs1, 11) ^ rv32b_ror(rs1, 25);
 }
 
 uint32_t sha256_sig0(uint32_t rs1)
 {
-    return rvb_ror(rs1, 7) ^ rvb_ror(rs1, 18) ^ (rs1 >> 3);
+    return rv32b_ror(rs1, 7) ^ rv32b_ror(rs1, 18) ^ (rs1 >> 3);
 }
 
 uint32_t sha256_sig1(uint32_t rs1)
 {
-    return rvb_ror(rs1, 17) ^ rvb_ror(rs1, 19) ^ (rs1 >> 10);
+    return rv32b_ror(rs1, 17) ^ rv32b_ror(rs1, 19) ^ (rs1 >> 10);
 }
 ```
 
@@ -261,12 +261,12 @@ mirror functions are expressed via left rotations):
 ```C
 uint32_t sm3_p0(uint32_t rs1)
 {
-    return rs1 ^ rvb_ror(rs1, 15) ^ rvb_ror(rs1, 23);
+    return rs1 ^ rv32b_ror(rs1, 15) ^ rv32b_ror(rs1, 23);
 }
 
 uint32_t sm3_p1(uint32_t rs1)
 {
-    return rs1 ^ rvb_ror(rs1, 9) ^ rvb_ror(rs1, 17);
+    return rs1 ^ rv32b_ror(rs1, 9) ^ rv32b_ror(rs1, 17);
 }
 ```
 The also uses RORI and ANDN from Bitmanip.
