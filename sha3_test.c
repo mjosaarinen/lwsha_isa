@@ -148,23 +148,3 @@ int test_shake()
 	return fail;
 }
 
-//  all tests
-
-int test_sha3_all()
-{
-	int fail = 0;
-
-	printf("[INFO] === SHA3 using rv32_keccakp() ===\n");
-	sha3_keccakp = rv32_keccakp;
-	fail += test_keccakp();
-	fail += test_sha3();
-	fail += test_shake();
-
-	printf("[INFO] === SHA3 using rv64_keccakp() ===\n");
-	sha3_keccakp = rv64_keccakp;
-	fail += test_keccakp();
-	fail += test_sha3();
-	fail += test_shake();
-
-	return fail;
-}

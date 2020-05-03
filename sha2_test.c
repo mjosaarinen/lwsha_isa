@@ -226,28 +226,3 @@ int test_sha2_hmac()
 	return fail;
 }
 
-//  all tests
-
-int test_sha2_all()
-{
-	int fail = 0;
-
-	printf("[INFO] === SHA2-256 using rv32_sha256_compress() ===\n");
-	sha256_compress = rv32_sha256_compress;
-	fail += test_sha2_256();
-
-	printf("[INFO] === SHA2-512 using rv64_sha512_compress() ===\n");
-	sha512_compress = rv64_sha512_compress;
-	fail += test_sha2_512();
-
-	printf("[INFO] === SHA2-512 using rv32_sha512_compress() ===\n");
-	sha512_compress = rv32_sha512_compress;
-	fail += test_sha2_512();
-
-	printf("[INFO] === rv32_sha256_compress() rv64_sha512_compress() ===\n");
-	sha256_compress = rv32_sha256_compress;
-	sha512_compress = rv64_sha512_compress;
-	fail += test_sha2_hmac();
-
-	return fail;
-}
