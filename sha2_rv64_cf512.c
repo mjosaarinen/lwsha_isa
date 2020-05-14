@@ -37,12 +37,12 @@ uint64_t sha512_sig1(uint64_t rs1)
 }
 
 //  (((a | c) & b) | (c & a)) = Maj(a, b, c)
-//  ((e & f) ^ rv64b_andn(g, e)) = Ch(e, f, g)
+//  (g ^ (e & (f ^ g))) = Ch(e, f, g)
 
 //  processing step, sets "d" and "h" as a function of all 8 inputs
 //  and message schedule "mi", round constant "ki"
 #define SHA512R(a, b, c, d, e, f, g, h, mi, ki) {	\
-	h = h + ((e & f) ^ rv64b_andn(g, e)) + mi + ki;	\
+	h = h + (g ^ (e & (f ^ g))) + mi + ki;			\
 	h = h + sha512_sum1(e);							\
 	d = d + h;										\
 	h = h + sha512_sum0(a);							\

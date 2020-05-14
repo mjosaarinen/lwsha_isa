@@ -35,7 +35,7 @@ uint32_t rv32b_clmulr(uint32_t rs1, uint32_t rs2)
 	return x;
 }
 
-//	64-bit
+//  64-bit
 
 uint64_t rv64b_clmul(uint64_t rs1, uint64_t rs2)
 {

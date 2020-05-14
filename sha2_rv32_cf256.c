@@ -41,7 +41,7 @@ uint32_t sha256_sig1(uint32_t rs1)
 //  processing step, sets "d" and "h" as a function of all 8 inputs
 //  and message schedule "mi", round constant "ki"
 #define SHA256R(a, b, c, d, e, f, g, h, mi, ki) {	\
-	h = h + ((e & f) ^ rv32b_andn(g, e)) + mi + ki;	\
+	h = h + (g ^ (e & (f ^ g))) + mi + ki;			\
 	h = h + sha256_sum1(e);							\
 	d = d + h;										\
 	h = h + sha256_sum0(a);							\

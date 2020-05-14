@@ -71,7 +71,7 @@ uint32_t sha512_sig1h(uint32_t rs1, uint32_t rs2)
 
 
 //  (((a | c) & b) | (c & a)) = Maj(a, b, c)
-//  ((e & f) ^ rv32b_andn(g, e)) = Ch(e, f, g)
+//  (g ^ (e & (f ^ g))) = Ch(e, f, g)
 
 //  64-bit addition; 3 * ADD, 1 * SLTU
 
@@ -110,8 +110,8 @@ uint32_t sha512_sig1h(uint32_t rs1, uint32_t rs2)
 	tl = kp[i];											\
 	th = kp[i + 1];										\
 	ADD64(xe, xf, xe, xf, tl, th);						\
-	tl = (x8 & xa) ^ rv32b_andn(xc, x8);					\
-	th = (x9 & xb) ^ rv32b_andn(xd, x9);					\
+	tl = (xc ^ (x8 & (xa ^ xc)));						\
+	th = (xd ^ (x9 & (xb ^ xd)));						\
 	ADD64(xe, xf, xe, xf, tl, th);						\
 	tl = sha512_sum1l(x8, x9);							\
 	th = sha512_sum1l(x9, x8);							\
