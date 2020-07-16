@@ -27,7 +27,7 @@ uint32_t sm3_p1(uint32_t rs1)
 #define SM3KEY(w0, w3, w7, wa, wd) {				\
 	t = w0 ^ w7 ^ rv32b_ror(wd, 17);				\
 	t = sm3_p1(t);									\
-	w0 = wa ^ rv32b_ror(w3, 25) ^ t;					}
+	w0 = wa ^ rv32b_ror(w3, 25) ^ t;				}
 
 //  rounds 0..15
 
@@ -48,14 +48,14 @@ uint32_t sm3_p1(uint32_t rs1)
 
 #define SM3RF1(a, b, c, d, e, f, g, h, w0, w4) {	\
 	h = h + w0;										\
-	t = rv32b_ror(a, 20);								\
+	t = rv32b_ror(a, 20);							\
 	u = t + e + tj;									\
-	u = rv32b_ror(u, 25);								\
+	u = rv32b_ror(u, 25);							\
 	d = d + (t ^ u) + (((a | c) & b) | (a & c));	\
-	b = rv32b_ror(b, 23);								\
-	h = h + u + ((e & f) ^ rv32b_andn(g, e));			\
+	b = rv32b_ror(b, 23);							\
+	h = h + u + ((e & f) ^ rv32b_andn(g, e));		\
 	h = sm3_p0(h);									\
-	f = rv32b_ror(f, 13);								\
+	f = rv32b_ror(f, 13);							\
 	d = d + (w0 ^ w4);								\
 	tj = rv32b_ror(tj, 31);							}
 
