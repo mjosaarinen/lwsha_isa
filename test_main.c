@@ -2,7 +2,7 @@
 //  2020-03-02  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-//	Main self-test code.
+//  Main self-test code.
 
 #include <stdio.h>
 

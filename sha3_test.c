@@ -147,4 +147,3 @@ int test_shake()
 
 	return fail;
 }
-

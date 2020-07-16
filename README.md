@@ -142,10 +142,10 @@ Hence we have the following core loop instruction mix:
 |----------:|------:|------:|----------:|----------:|
 | ADD       |   3   |   7   |   592     |   752     |
 | AND       |   0   |   3   |   192     |   240     |
-| ANDN      |   0   |   1   |   64      |   80      |
+| XOR       |   0   |   2   |   128     |   160     |
 | OR        |   0   |   2   |   128     |   160     |
 | SHAx_y    |   2   |   2   |   224     |   288     |
-| **Total** |   5   |   15  | **1200**  | **1520**  |
+| **Total** |   5   |   16  | **1264**  | **1600**  |
 
 Each SHAx instruction would decompose into 5-10 base instructions (even with
 rotate), so this is a significant speedup (2 × faster or more).
@@ -221,19 +221,19 @@ So essentially the arithmetic instruction counts are doubled in relation
 tor the 64-bit wide SHA-512, except that each ADD becomes four instructions;
 three 32-bit ADDs and one SLTU.
 
-| **Type**  | **K** | **R** | 64×K+80×R   |
+| **Type**  | **K** | **R** | 64×K+80×R |
 |----------:|------:|------:|----------:|
 | ADD       |   9   |   21  |   2256    |
 | SLTU      |   3   |   7   |   752     |
 | AND       |   0   |   6   |   480     |
-| ANDN      |   0   |   2   |   160     |
+| XOR       |   0   |   4   |   320     |
 | OR        |   0   |   4   |   320     |
 | SHAx_y    |   4   |   4   |   576     |
-| **Total** |   19  |   51  | **4544**  |
+| **Total** |   16  |   46  | **4704**  |
 
 Note that if the 64-bit addition is hypothetically instead split into two
 instructions, a 32-bit ADD (that sets the carry flag) and a 32-bit "ADC"
-(add with carry) then the total instruction count comes down 17% to 3792.
+(add with carry) then the total instruction count comes down 32% to 3200.
 
 
 ##  SM3

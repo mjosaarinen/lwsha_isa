@@ -2,8 +2,8 @@
 //  2020-03-07  Markku-Juhani O. Saarinen <mjos@pqshield.com>
 //  Copyright (c) 2020, PQShield Ltd. All rights reserved.
 
-//	Prototypes for bitmanip instruction emulation code.
-//	-- intended to be replaced with intrinsics.
+//  Prototypes for bitmanip instruction emulation code.
+//  -- intended to be replaced with intrinsics.
 
 #ifndef _BITMANIP_H_
 #define _BITMANIP_H_

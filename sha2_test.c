@@ -225,4 +225,3 @@ int test_sha2_hmac()
 
 	return fail;
 }
-
