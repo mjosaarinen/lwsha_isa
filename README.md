@@ -64,7 +64,7 @@ this 1600-bit, 24-round keyless permutation that is the foundation of all
 current permutation-based NIST cryptography (even beyond FIPS 202).
 
 * [sha3_rv64_keccakp.c](sha3_rv64_keccakp.c) is an RV64 implementation that
-    uses (per round) 76 × XOR, 29 × RORIW, and 25 × ANDN, and few auxiliary
+    uses (per round) 76 × XOR, 29 × RORI, and 25 × ANDN, and few auxiliary
     ops for loading a round constant and looping.
     The 1600-bit state and temporary registers fit into the register file,
     although a C compiler may not be able to do that.
