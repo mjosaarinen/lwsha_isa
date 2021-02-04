@@ -1,8 +1,8 @@
 #   RISC-V ISA Extensions and Standard Hash Functions
 
-**[HISTORICAL]** This personal repo was used for work-in-progress 
+**[HISTORICAL]** *This personal repo was used for work-in-progress 
 contributions to the RISC-V Cryptographic Extensions Task Group in 2020
-and is no longer updated.
+and is no longer updated.*
 See [riscv-crypto](https://github.com/riscv/riscv-crypto/) for
 up to date information.
 
